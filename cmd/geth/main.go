@@ -315,8 +315,11 @@ func geth(ctx *cli.Context) error {
 	prepare(ctx)
 	stack, backend := makeFullNode(ctx)
 	pluginsInitializeNode(stack, backend)
+	if ok, err := plugins.RunSubcommand(ctx); ok {
+		stack.Close()
+		return err
+	}
 	defer stack.Close()
-	if ok, err := plugins.RunSubcommand(ctx); ok { return err }
 	if !plugins.ParseFlags(ctx.Args()) {
 		if args := ctx.Args(); len(args) > 0 {
 			return fmt.Errorf("invalid command: %q", args[0])
