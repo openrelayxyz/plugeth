@@ -61,7 +61,7 @@ jobs:
             mkdir -p /home/circleci/go/src
             go get
       - run:
-          name: build image
+          name: build plugins
           command: |
             sudo apt update
             sudo apt install gcc-aarch64-linux-gnu libc6-dev-arm64-cross wget -y
