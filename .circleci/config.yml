@@ -87,7 +87,7 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
-      - build_push:
+      - build_geth_push:
           # requires:
           #   - test
           filters:
