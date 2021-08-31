@@ -8,6 +8,7 @@ import (
   "reflect"
 )
 
+// TODO (philip): Translate to use core.Tracer instead of vm.Tracer. This will require a wrapper
 func GetPluginTracer(pl *plugins.PluginLoader, name string) (func(*state.StateDB)interfaces.TracerResult, bool) {
   tracers := pl.Lookup("Tracers", func(item interface{}) bool {
     _, ok := item.(*map[string]func(*state.StateDB)interfaces.TracerResult)

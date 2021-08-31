@@ -5,16 +5,18 @@ import (
   "github.com/ethereum/go-ethereum/common"
   "github.com/ethereum/go-ethereum/plugins"
   "github.com/ethereum/go-ethereum/log"
+  "github.com/ethereum/go-ethereum/rlp"
 )
 
 func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
   fnList := pl.Lookup("PreProcessBlock", func(item interface{}) bool {
-    _, ok := item.(func(*types.Block))
+    _, ok := item.(func([]byte))
     return ok
   })
+  encoded, _ = rlp.EncodeToBytes(block)
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Block)); ok {
-      fn(block)
+    if fn, ok := fni.(func([]byte)); ok {
+      fn(encoded)
     }
   }
 }
@@ -27,12 +29,14 @@ func pluginPreProcessBlock(block *types.Block) {
 }
 func PluginPreProcessTransaction(pl *plugins.PluginLoader, tx *types.Transaction, block *types.Block, i int) {
   fnList := pl.Lookup("PreProcessTransaction", func(item interface{}) bool {
-    _, ok := item.(func(*types.Transaction, *types.Block, int))
+    _, ok := item.(func([]byte, []byte, int))
     return ok
   })
+  txBytes, _ := tx.MarshalBinary()
+  blockBytes, _ := rlp.EncodeToBytes(block)
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Transaction, *types.Block, int)); ok {
-      fn(tx, block, i)
+    if fn, ok := fni.(func([]byte, []byte, int)); ok {
+      fn(txBytes, blockBytes, i)
     }
   }
 }
