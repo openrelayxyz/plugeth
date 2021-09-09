@@ -1,30 +1,33 @@
 package plugins
 
 import (
+	"github.com/openrelayxyz/plugeth-utils/core"
+
+	"flag"
+	"fmt"
+	"io/ioutil"
+	"path"
 	"plugin"
+	"reflect"
+	"strings"
+
 	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
-	"flag"
-	"io/ioutil"
-	"strings"
-	"path"
-	"fmt"
-	"reflect"
 )
-
 
 type Subcommand func(*cli.Context, []string) error
 
-
-type PluginLoader struct{
-	Plugins []*plugin.Plugin
+type PluginLoader struct {
+	Plugins     []*plugin.Plugin
 	Subcommands map[string]Subcommand
-	Flags []*flag.FlagSet
+	Flags       []*flag.FlagSet
 	LookupCache map[string][]interface{}
 }
 
 func (pl *PluginLoader) Lookup(name string, validate func(interface{}) bool) []interface{} {
-	if v, ok := pl.LookupCache[name]; ok { return v }
+	if v, ok := pl.LookupCache[name]; ok {
+		return v
+	}
 	results := []interface{}{}
 	for _, plugin := range pl.Plugins {
 		if v, err := plugin.Lookup(name); err == nil {
@@ -45,16 +48,14 @@ func Lookup(name string, validate func(interface{}) bool) []interface{} {
 	return DefaultPluginLoader.Lookup(name, validate)
 }
 
-
 var DefaultPluginLoader *PluginLoader
-
 
 func NewPluginLoader(target string) (*PluginLoader, error) {
 	pl := &PluginLoader{
 		Plugins: []*plugin.Plugin{},
 		// RPCPlugins: []APILoader{},
 		Subcommands: make(map[string]Subcommand),
-		Flags: []*flag.FlagSet{},
+		Flags:       []*flag.FlagSet{},
 		LookupCache: make(map[string][]interface{}),
 		// CreateConsensusEngine: ethconfig.CreateConsensusEngine,
 		// UpdateBlockchainVMConfig: func(cfg *vm.Config) {},
@@ -106,33 +107,41 @@ func NewPluginLoader(target string) (*PluginLoader, error) {
 
 func Initialize(target string, ctx *cli.Context) (err error) {
 	DefaultPluginLoader, err = NewPluginLoader(target)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	DefaultPluginLoader.Initialize(ctx)
 	return nil
 }
 
 func (pl *PluginLoader) Initialize(ctx *cli.Context) {
 	fns := pl.Lookup("Initialize", func(i interface{}) bool {
-		_, ok := i.(func(*cli.Context, core.PluginLoader))
+		_, ok := i.(func(*cli.Context, core.PluginLoader, core.Logger))
 		return ok
 	})
 	for _, fni := range fns {
-		if fn, ok := fni.(func(*cli.Context, core.PluginLoader)); ok {
-			fn(ctx, pl)
+		if fn, ok := fni.(func(*cli.Context, core.PluginLoader, core.Logger)); ok {
+			fn(ctx, pl, log.Root())
 		}
 	}
 }
 
 func (pl *PluginLoader) RunSubcommand(ctx *cli.Context) (bool, error) {
 	args := ctx.Args()
-	if len(args) == 0 { return false, fmt.Errorf("No subcommand arguments")}
+	if len(args) == 0 {
+		return false, fmt.Errorf("no subcommand arguments")
+	}
 	subcommand, ok := pl.Subcommands[args[0]]
-	if !ok { return false, fmt.Errorf("Subcommand %v does not exist", args[0])}
+	if !ok {
+		return false, fmt.Errorf("Subcommand %v does not exist", args[0])
+	}
 	return true, subcommand(ctx, args[1:])
 }
 
 func RunSubcommand(ctx *cli.Context) (bool, error) {
-	if DefaultPluginLoader == nil { return false, fmt.Errorf("Plugin loader not initialized") }
+	if DefaultPluginLoader == nil {
+		return false, fmt.Errorf("Plugin loader not initialized")
+	}
 	return DefaultPluginLoader.RunSubcommand(ctx)
 }
 
