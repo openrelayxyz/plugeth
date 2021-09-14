@@ -53,12 +53,9 @@ var DefaultPluginLoader *PluginLoader
 func NewPluginLoader(target string) (*PluginLoader, error) {
 	pl := &PluginLoader{
 		Plugins: []*plugin.Plugin{},
-		// RPCPlugins: []APILoader{},
 		Subcommands: make(map[string]Subcommand),
 		Flags:       []*flag.FlagSet{},
 		LookupCache: make(map[string][]interface{}),
-		// CreateConsensusEngine: ethconfig.CreateConsensusEngine,
-		// UpdateBlockchainVMConfig: func(cfg *vm.Config) {},
 	}
 	files, err := ioutil.ReadDir(target)
 	if err != nil {

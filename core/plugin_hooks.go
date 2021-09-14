@@ -13,7 +13,7 @@ func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
     _, ok := item.(func([]byte))
     return ok
   })
-  encoded, _ = rlp.EncodeToBytes(block)
+  encoded, _ := rlp.EncodeToBytes(block)
   for _, fni := range fnList {
     if fn, ok := fni.(func([]byte)); ok {
       fn(encoded)
