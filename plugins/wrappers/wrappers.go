@@ -188,7 +188,7 @@ func NewNode(n *node.Node) *Node {
 }
 
 func (n *Node) Server() core.Server {
-	return n.Server()
+	return n.n.Server()
 }
 
 func (n *Node) DataDir() string {
