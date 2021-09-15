@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"sync"
 	"time"
+	"reflect"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -22,6 +24,7 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
+	"github.com/openrelayxyz/plugeth-utils/restricted/params"
 )
 
 type WrappedScopeContext struct {
@@ -226,6 +229,7 @@ type Backend struct {
 	pendingLogsOnce sync.Once
 	removedLogsFeed event.Feed
 	removedLogsOnce sync.Once
+	chainConfig     *params.ChainConfig
 }
 
 func NewBackend(b interfaces.Backend) *Backend {
@@ -563,3 +567,36 @@ func (b *Backend) SubscribeRemovedLogsEvent(ch chan<- []byte) core.Subscription 
 	})
 	return b.removedLogsFeed.Subscribe(ch)
 } // RLP encoded logs
+
+func convertAndSet(a, b reflect.Value) (err error) {
+	defer func() {
+		if recover() != nil {
+			fmt.Errorf("error converting: %v", err.Error())
+		}
+	}()
+	a.Set(b.Convert(a.Type()))
+	return nil
+}
+
+func (b *Backend) ChainConfig() *params.ChainConfig {
+	// We're using the reflect library to copy data from params.ChainConfig to
+	// pparams.ChainConfig, so this function shouldn't need to be touched for
+	// simple changes to ChainConfig (though pparams.ChainConfig may need to be
+	// updated). Note that this probably won't carry over consensus engine data.
+	if b.chainConfig != nil { return b.chainConfig }
+	b.chainConfig = &params.ChainConfig{}
+	nval := reflect.ValueOf(b.b.ChainConfig())
+	ntype := nval.Type()
+	lval := reflect.ValueOf(b.chainConfig)
+	for i := 0; i < nval.NumField(); i++ {
+		field := ntype.Field(i)
+		v := nval.FieldByName(field.Name)
+		lv := lval.FieldByName(field.Name)
+		if v.Type() == lv.Type() && lv.CanSet() {
+			lv.Set(v)
+		} else {
+			convertAndSet(lv, v)
+		}
+	}
+	return b.chainConfig
+}
