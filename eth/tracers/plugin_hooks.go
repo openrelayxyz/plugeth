@@ -13,7 +13,7 @@ import (
 
 func GetPluginTracer(pl *plugins.PluginLoader, name string) (func(*state.StateDB) interfaces.TracerResult, bool) {
 	tracers := pl.Lookup("Tracers", func(item interface{}) bool {
-		_, ok := item.(*map[string]func(*state.StateDB) interfaces.TracerResult)
+		_, ok := item.(*map[string]func(core.StateDB) core.TracerResult)
 		if !ok {
 			log.Warn("Found tracer that did not match type", "tracer", reflect.TypeOf(item))
 		}
