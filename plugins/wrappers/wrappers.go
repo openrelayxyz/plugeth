@@ -3,11 +3,11 @@ package wrappers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/big"
+	"reflect"
 	"sync"
 	"time"
-	"reflect"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -19,12 +19,12 @@ import (
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/plugins/interfaces"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
-	"github.com/openrelayxyz/plugeth-utils/restricted/params"
 )
 
 type WrappedScopeContext struct {
@@ -583,7 +583,9 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 	// pparams.ChainConfig, so this function shouldn't need to be touched for
 	// simple changes to ChainConfig (though pparams.ChainConfig may need to be
 	// updated). Note that this probably won't carry over consensus engine data.
-	if b.chainConfig != nil { return b.chainConfig }
+	if b.chainConfig != nil {
+		return b.chainConfig
+	}
 	b.chainConfig = &params.ChainConfig{}
 	nval := reflect.ValueOf(b.b.ChainConfig())
 	ntype := nval.Type()
