@@ -104,7 +104,9 @@ func callbackifyChanPubSub(receiver, fn reflect.Value) *callback {
 					if !recvOK {
 						return
 					}
-					notifier.Notify(rpcSub.ID, val.Interface())
+					if err := notifier.Notify(rpcSub.ID, val.Interface()); err != nil {
+						log.Warn("Subscription notification failed", "id", rpcSub.ID, "err", err)
+					}
 				case 1:
 					cancel()
 					return
@@ -126,15 +128,10 @@ func pluginExtendedCallbacks(callbacks map[string]*callback, receiver reflect.Va
 		if method.PkgPath != "" {
 			continue // method not exported
 		}
-		if method.Name == "Timer" {
-			methodType := method.Func.Type()
-			log.Info("Timer method", "in", methodType.NumIn(), "out", methodType.NumOut(), "contextType", isContextType(methodType.In(1)), "chanType", isChanType(methodType.Out(0)), "chandir", methodType.Out(0).ChanDir() & reflect.RecvDir == reflect.RecvDir, "errorType", isErrorType(methodType.Out(1)))
-		}
 		if isChanPubsub(method.Type) {
 			cb := callbackifyChanPubSub(receiver, method.Func)
 			name := formatName(method.Name)
 			callbacks[name] = cb
-			log.Info("Added chanPubsub", "name", name, "args", cb.argTypes)
 		}
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/event"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -155,4 +156,21 @@ func ParseFlags(args []string) bool {
 		return false
 	}
 	return DefaultPluginLoader.ParseFlags(args)
+}
+
+
+type feedWrapper struct {
+	feed *event.Feed
+}
+
+func (f *feedWrapper) Send(item interface{}) int {
+	return f.feed.Send(item)
+}
+
+func (f *feedWrapper) Subscribe(ch interface{}) core.Subscription {
+	return f.feed.Subscribe(ch)
+}
+
+func (pl *PluginLoader) GetFeed() core.Feed {
+	return &feedWrapper{&event.Feed{}}
 }
