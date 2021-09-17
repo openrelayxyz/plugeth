@@ -1,0 +1,97 @@
+# orbs:
+#   aws-cli: circleci/aws-cli@1.0.0 #See: https://circleci.com/orbs/registry/orb/circleci/aws-cli
+
+version: 2.1
+jobs:
+  test:
+    docker:
+      - image: cimg/go:1.16
+    steps:
+      - checkout
+  build_geth_push:
+    docker: # run the steps with Docker
+      - image: cimg/go:1.16 # ...with this image as the primary container
+      # this is where all `steps` will run
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Prep env
+          command: |
+            mkdir -p /home/circleci/go/src
+            go get
+      - run:
+          name: build geth binaries
+          command: |
+            sudo apt update
+            sudo apt install gcc-aarch64-linux-gnu libc6-dev-arm64-cross wget -y
+            export GOPATH=$HOME/go
+            export GOARCH=amd64
+            go build -o geth-amd64 ./cmd/geth
+            CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOARCH=arm64  go build -o geth-arm64 ./cmd/geth
+      # - run:
+      #     name: build image
+      #     command: |
+      #       export GOPATH=$HOME/go
+      #       make geth-linux-amd64
+      # - aws-cli/setup: #See: https://circleci.com/orbs/registry/orb/circleci/aws-cli
+      #     aws-access-key-id: ACCESS_KEY_ID
+      #     aws-secret-access-key: SECRET_ACCESS_KEY
+      #     aws-region: AWS_REGION
+      # - run:
+      #     name: push to s3
+      #     command: aws s3 cp ./geth-amd64 s3://ethercattle-binaries/$CIRCLE_TAG/geth-linux-amd64 --acl=public-read
+      # - run:
+      #     name: push to s3
+      #     command: aws s3 cp ./geth-arm64 s3://ethercattle-binaries/$CIRCLE_TAG/geth-linux-arm64 --acl=public-read
+      # - run:
+      #     name: Message Slack
+      #     command: |
+      #         ./slack-post.sh -w $SlackWebhook -m "*go-ethereum*:\nTag: $CIRCLE_TAG \n $(jq -r '.builds[0].artifact_id' ./manifest.json)"
+  build_plugins:
+    docker: # run the steps with Docker
+      - image: cimg/go:1.16 # ...with this image as the primary container
+      # this is where all `steps` will run
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Prep env
+          command: |
+            mkdir -p /home/circleci/go/src
+            go get
+      - run:
+          name: build plugins
+          command: |
+            sudo apt update
+            sudo apt install gcc-aarch64-linux-gnu libc6-dev-arm64-cross wget -y
+            export GOPATH=$HOME/go
+            export GOARCH=amd64
+            mkdir plugin-artifacts
+            for x in $($(which ls) -1 plugins/packages); do go build -buildmode=plugin -o plugin-artifacts/$x.so ./plugins/packages/$x ; done
+
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      # - test:
+      #     filters:  # required since `deploy` has tag filters AND requires `build`
+      #       tags:
+      #         only: /.*/
+      - build_plugins:
+          # requires:
+          #   - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - build_geth_push:
+          # requires:
+          #   - test
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
