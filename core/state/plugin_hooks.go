@@ -7,8 +7,6 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
-// TODO (philip): change common.Hash to core.Hash,
-
 func PluginStateUpdate(pl *plugins.PluginLoader, blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) {
 	fnList := pl.Lookup("StateUpdate", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, core.Hash, map[core.Hash]struct{}, map[core.Hash][]byte, map[core.Hash]map[core.Hash][]byte))
