@@ -41,6 +41,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/plugins"
+	"github.com/ethereum/go-ethereum/plugins/wrappers"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -314,15 +315,19 @@ func geth(ctx *cli.Context) error {
 	if err := plugins.Initialize(path.Join(ctx.GlobalString(utils.DataDirFlag.Name), "plugins"), ctx); err != nil { return err }
 	prepare(ctx)
 	stack, backend := makeFullNode(ctx)
-	pluginsInitializeNode(stack, backend)
+	wrapperBackend := wrappers.NewBackend(backend)
+	pluginsInitializeNode(stack, wrapperBackend)
+	if ok, err := plugins.RunSubcommand(ctx); ok {
+		stack.Close()
+		return err
+	}
 	defer stack.Close()
-	if ok, err := plugins.RunSubcommand(ctx); ok { return err }
 	if !plugins.ParseFlags(ctx.Args()) {
 		if args := ctx.Args(); len(args) > 0 {
 			return fmt.Errorf("invalid command: %q", args[0])
 		}
 	}
-	stack.RegisterAPIs(pluginGetAPIs(stack, backend))
+	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 
 	startNode(ctx, stack, backend)
 	stack.Wait()

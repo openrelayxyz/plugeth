@@ -1,20 +1,24 @@
 package core
 
 import (
+  "encoding/json"
   "github.com/ethereum/go-ethereum/core/types"
   "github.com/ethereum/go-ethereum/common"
   "github.com/ethereum/go-ethereum/plugins"
   "github.com/ethereum/go-ethereum/log"
+  "github.com/ethereum/go-ethereum/rlp"
+  "github.com/openrelayxyz/plugeth-utils/core"
 )
 
 func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
   fnList := pl.Lookup("PreProcessBlock", func(item interface{}) bool {
-    _, ok := item.(func(*types.Block))
+    _, ok := item.(func(core.Hash, uint64, []byte))
     return ok
   })
+  encoded, _ := rlp.EncodeToBytes(block)
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Block)); ok {
-      fn(block)
+    if fn, ok := fni.(func(core.Hash, uint64, []byte)); ok {
+      fn(core.Hash(block.Hash()), block.NumberU64(), encoded)
     }
   }
 }
@@ -27,12 +31,13 @@ func pluginPreProcessBlock(block *types.Block) {
 }
 func PluginPreProcessTransaction(pl *plugins.PluginLoader, tx *types.Transaction, block *types.Block, i int) {
   fnList := pl.Lookup("PreProcessTransaction", func(item interface{}) bool {
-    _, ok := item.(func(*types.Transaction, *types.Block, int))
+    _, ok := item.(func([]byte, core.Hash, core.Hash, int))
     return ok
   })
+  txBytes, _ := tx.MarshalBinary()
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Transaction, *types.Block, int)); ok {
-      fn(tx, block, i)
+    if fn, ok := fni.(func([]byte, core.Hash, core.Hash, int)); ok {
+      fn(txBytes, core.Hash(tx.Hash()), core.Hash(block.Hash()), i)
     }
   }
 }
@@ -45,12 +50,12 @@ func pluginPreProcessTransaction(tx *types.Transaction, block *types.Block, i in
 }
 func PluginBlockProcessingError(pl *plugins.PluginLoader, tx *types.Transaction, block *types.Block, err error) {
   fnList := pl.Lookup("BlockProcessingError", func(item interface{}) bool {
-    _, ok := item.(func(*types.Transaction, *types.Block, error))
+    _, ok := item.(func(core.Hash, core.Hash, error))
     return ok
   })
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Transaction, *types.Block, error)); ok {
-      fn(tx, block, err)
+    if fn, ok := fni.(func(core.Hash, core.Hash, error)); ok {
+      fn(core.Hash(tx.Hash()), core.Hash(block.Hash()), err)
     }
   }
 }
@@ -63,12 +68,13 @@ func pluginBlockProcessingError(tx *types.Transaction, block *types.Block, err e
 }
 func PluginPostProcessTransaction(pl *plugins.PluginLoader, tx *types.Transaction, block *types.Block, i int, receipt *types.Receipt) {
   fnList := pl.Lookup("PostProcessTransaction", func(item interface{}) bool {
-    _, ok := item.(func(*types.Transaction, *types.Block, int, *types.Receipt))
+    _, ok := item.(func(core.Hash, core.Hash, int, []byte))
     return ok
   })
+  receiptBytes, _ := json.Marshal(receipt)
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Transaction, *types.Block, int, *types.Receipt)); ok {
-      fn(tx, block, i, receipt)
+    if fn, ok := fni.(func(core.Hash, core.Hash, int, []byte)); ok {
+      fn(core.Hash(tx.Hash()), core.Hash(block.Hash()), i, receiptBytes)
     }
   }
 }
@@ -81,12 +87,12 @@ func pluginPostProcessTransaction(tx *types.Transaction, block *types.Block, i i
 }
 func PluginPostProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
   fnList := pl.Lookup("PostProcessBlock", func(item interface{}) bool {
-    _, ok := item.(func(*types.Block))
+    _, ok := item.(func(core.Hash))
     return ok
   })
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Block)); ok {
-      fn(block)
+    if fn, ok := fni.(func(core.Hash)); ok {
+      fn(core.Hash(block.Hash()))
     }
   }
 }
@@ -101,12 +107,17 @@ func pluginPostProcessBlock(block *types.Block) {
 
 func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Hash, logs []*types.Log) {
   fnList := pl.Lookup("NewHead", func(item interface{}) bool {
-    _, ok := item.(func(*types.Block, common.Hash, []*types.Log))
+    _, ok := item.(func([]byte, core.Hash, [][]byte))
     return ok
   })
+  blockBytes, _ := rlp.EncodeToBytes(block)
+  logBytes := make([][]byte, len(logs))
+  for i, l := range logs {
+    logBytes[i], _ = rlp.EncodeToBytes(l)
+  }
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Block, common.Hash, []*types.Log)); ok {
-      fn(block, hash, logs)
+    if fn, ok := fni.(func([]byte, core.Hash, [][]byte)); ok {
+      fn(blockBytes, core.Hash(hash), logBytes)
     }
   }
 }
@@ -120,12 +131,17 @@ func pluginNewHead(block *types.Block, hash common.Hash, logs []*types.Log) {
 
 func PluginNewSideBlock(pl *plugins.PluginLoader, block *types.Block, hash common.Hash, logs []*types.Log) {
   fnList := pl.Lookup("NewSideBlock", func(item interface{}) bool {
-    _, ok := item.(func(*types.Block, common.Hash, []*types.Log))
+    _, ok := item.(func([]byte, core.Hash, [][]byte))
     return ok
   })
+  blockBytes, _ := rlp.EncodeToBytes(block)
+  logBytes := make([][]byte, len(logs))
+  for i, l := range logs {
+    logBytes[i], _ = rlp.EncodeToBytes(l)
+  }
   for _, fni := range fnList {
-    if fn, ok := fni.(func(*types.Block, common.Hash, []*types.Log)); ok {
-      fn(block, hash, logs)
+    if fn, ok := fni.(func([]byte, core.Hash, [][]byte)); ok {
+      fn(blockBytes, core.Hash(hash), logBytes)
     }
   }
 }
@@ -139,12 +155,20 @@ func pluginNewSideBlock(block *types.Block, hash common.Hash, logs []*types.Log)
 
 func PluginReorg(pl *plugins.PluginLoader, commonBlock *types.Block, oldChain, newChain types.Blocks) {
   fnList := pl.Lookup("Reorg", func(item interface{}) bool {
-    _, ok := item.(func(common *types.Block, oldChain, newChain types.Blocks))
+    _, ok := item.(func(core.Hash, []core.Hash, []core.Hash))
     return ok
   })
+  oldChainHashes := make([]core.Hash, len(oldChain))
+  for i, block := range oldChain {
+    oldChainHashes[i] = core.Hash(block.Hash())
+  }
+  newChainHashes := make([]core.Hash, len(newChain))
+  for i, block := range newChain {
+    newChainHashes[i] = core.Hash(block.Hash())
+  }
   for _, fni := range fnList {
-    if fn, ok := fni.(func(common *types.Block, oldChain, newChain types.Blocks)); ok {
-      fn(commonBlock, oldChain, newChain)
+    if fn, ok := fni.(func(core.Hash, []core.Hash, []core.Hash)); ok {
+      fn(core.Hash(commonBlock.Hash()), oldChainHashes, newChainHashes)
     }
   }
 }
