@@ -2,6 +2,7 @@ package core
 
 import (
   "encoding/json"
+  "math/big"
   "github.com/ethereum/go-ethereum/core/types"
   "github.com/ethereum/go-ethereum/common"
   "github.com/ethereum/go-ethereum/plugins"
@@ -105,9 +106,9 @@ func pluginPostProcessBlock(block *types.Block) {
 }
 
 
-func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Hash, logs []*types.Log) {
+func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Hash, logs []*types.Log, td *big.Int) {
   fnList := pl.Lookup("NewHead", func(item interface{}) bool {
-    _, ok := item.(func([]byte, core.Hash, [][]byte))
+    _, ok := item.(func([]byte, core.Hash, [][]byte, *big.Int))
     return ok
   })
   blockBytes, _ := rlp.EncodeToBytes(block)
@@ -116,17 +117,17 @@ func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Has
     logBytes[i], _ = rlp.EncodeToBytes(l)
   }
   for _, fni := range fnList {
-    if fn, ok := fni.(func([]byte, core.Hash, [][]byte)); ok {
-      fn(blockBytes, core.Hash(hash), logBytes)
+    if fn, ok := fni.(func([]byte, core.Hash, [][]byte, *big.Int)); ok {
+      fn(blockBytes, core.Hash(hash), logBytes, td)
     }
   }
 }
-func pluginNewHead(block *types.Block, hash common.Hash, logs []*types.Log) {
+func pluginNewHead(block *types.Block, hash common.Hash, logs []*types.Log, td *big.Int) {
   if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting NewHead, but default PluginLoader has not been initialized")
     return
   }
-  PluginNewHead(plugins.DefaultPluginLoader, block, hash, logs)
+  PluginNewHead(plugins.DefaultPluginLoader, block, hash, logs, td)
 }
 
 func PluginNewSideBlock(pl *plugins.PluginLoader, block *types.Block, hash common.Hash, logs []*types.Log) {
