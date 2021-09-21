@@ -588,12 +588,12 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 	}
 	b.chainConfig = &params.ChainConfig{}
 	nval := reflect.ValueOf(b.b.ChainConfig())
-	ntype := nval.Type()
+	ntype := nval.Elem().Type()
 	lval := reflect.ValueOf(b.chainConfig)
-	for i := 0; i < nval.NumField(); i++ {
+	for i := 0; i < nval.Elem().NumField(); i++ {
 		field := ntype.Field(i)
-		v := nval.FieldByName(field.Name)
-		lv := lval.FieldByName(field.Name)
+		v := nval.Elem().FieldByName(field.Name)
+		lv := lval.Elem().FieldByName(field.Name)
 		if v.Type() == lv.Type() && lv.CanSet() {
 			lv.Set(v)
 		} else {
