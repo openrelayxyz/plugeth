@@ -240,7 +240,7 @@ func (b *Backend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
 	return b.b.SuggestGasTipCap(ctx)
 }
 func (b *Backend) ChainDb() restricted.Database {
-	return b.b.ChainDb()
+	return &dbWrapper{b.b.ChainDb()}
 }
 func (b *Backend) ExtRPCEnabled() bool {
 	return b.b.ExtRPCEnabled()
