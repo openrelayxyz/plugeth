@@ -7,9 +7,9 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
-func PluginStateUpdate(pl *plugins.PluginLoader, blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) {
+func PluginStateUpdate(pl *plugins.PluginLoader, blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte, codeUpdates map[common.Hash][]byte) {
 	fnList := pl.Lookup("StateUpdate", func(item interface{}) bool {
-		_, ok := item.(func(core.Hash, core.Hash, map[core.Hash]struct{}, map[core.Hash][]byte, map[core.Hash]map[core.Hash][]byte))
+		_, ok := item.(func(core.Hash, core.Hash, map[core.Hash]struct{}, map[core.Hash][]byte, map[core.Hash]map[core.Hash][]byte, map[core.Hash][]byte))
 		return ok
 	})
 	coreDestructs := make(map[core.Hash]struct{})
@@ -27,18 +27,22 @@ func PluginStateUpdate(pl *plugins.PluginLoader, blockRoot, parentRoot common.Ha
 			coreStorage[core.Hash(k)][core.Hash(h)] = d
 		}
 	}
+	coreCode := make(map[core.Hash][]byte)
+	for k, v := range codeUpdates {
+		coreCode[core.Hash(k)] = v
+	}
 
 	for _, fni := range fnList {
-		if fn, ok := fni.(func(core.Hash, core.Hash, map[core.Hash]struct{}, map[core.Hash][]byte, map[core.Hash]map[core.Hash][]byte)); ok {
-			fn(core.Hash(blockRoot), core.Hash(parentRoot), coreDestructs, coreAccounts, coreStorage)
+		if fn, ok := fni.(func(core.Hash, core.Hash, map[core.Hash]struct{}, map[core.Hash][]byte, map[core.Hash]map[core.Hash][]byte, map[core.Hash][]byte)); ok {
+			fn(core.Hash(blockRoot), core.Hash(parentRoot), coreDestructs, coreAccounts, coreStorage, coreCode)
 		}
 	}
 }
 
-func pluginStateUpdate(blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte) {
+func pluginStateUpdate(blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte, codeUpdates map[common.Hash][]byte) {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting StateUpdate, but default PluginLoader has not been initialized")
 		return
 	}
-	PluginStateUpdate(plugins.DefaultPluginLoader, blockRoot, parentRoot, destructs, accounts, storage)
+	PluginStateUpdate(plugins.DefaultPluginLoader, blockRoot, parentRoot, destructs, accounts, storage, codeUpdates)
 }

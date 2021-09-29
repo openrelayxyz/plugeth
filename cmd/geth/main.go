@@ -314,6 +314,11 @@ func prepare(ctx *cli.Context) {
 func geth(ctx *cli.Context) error {
 	if err := plugins.Initialize(path.Join(ctx.GlobalString(utils.DataDirFlag.Name), "plugins"), ctx); err != nil { return err }
 	prepare(ctx)
+	if !plugins.ParseFlags(ctx.Args()) {
+		if args := ctx.Args(); len(args) > 0 {
+			return fmt.Errorf("invalid command: %q", args[0])
+		}
+	}
 	stack, backend := makeFullNode(ctx)
 	wrapperBackend := wrappers.NewBackend(backend)
 	pluginsInitializeNode(stack, wrapperBackend)
@@ -322,11 +327,6 @@ func geth(ctx *cli.Context) error {
 		return err
 	}
 	defer stack.Close()
-	if !plugins.ParseFlags(ctx.Args()) {
-		if args := ctx.Args(); len(args) > 0 {
-			return fmt.Errorf("invalid command: %q", args[0])
-		}
-	}
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 
 	startNode(ctx, stack, backend)
