@@ -2,14 +2,14 @@ package core
 
 import (
 	"testing"
-
+	"math/big"
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
 func TestReorgLongHeadersHook(t *testing.T) {
 	invoked := false
-	done := plugins.HookTester("NewHead", func(b []byte, h core.Hash, logs [][]byte) {
+	done := plugins.HookTester("NewHead", func(b []byte, h core.Hash, logs [][]byte, td *big.Int) {
 		invoked = true
 		if b == nil {
 			t.Errorf("Expected block to be non-nil")
