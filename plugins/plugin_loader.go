@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereum/go-ethereum/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -53,7 +53,7 @@ var DefaultPluginLoader *PluginLoader
 
 func NewPluginLoader(target string) (*PluginLoader, error) {
 	pl := &PluginLoader{
-		Plugins: []*plugin.Plugin{},
+		Plugins:     []*plugin.Plugin{},
 		Subcommands: make(map[string]Subcommand),
 		Flags:       []*flag.FlagSet{},
 		LookupCache: make(map[string][]interface{}),
@@ -157,7 +157,6 @@ func ParseFlags(args []string) bool {
 	}
 	return DefaultPluginLoader.ParseFlags(args)
 }
-
 
 type feedWrapper struct {
 	feed *event.Feed

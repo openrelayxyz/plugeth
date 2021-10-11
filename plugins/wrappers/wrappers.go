@@ -213,6 +213,10 @@ func (n *Node) ResolvePath(x string) string {
 	return n.n.ResolvePath(x)
 }
 
+func (n *Node) Attach() (core.Client, error) {
+	return n.n.Attach()
+}
+
 type Backend struct {
 	b               interfaces.Backend
 	newTxsFeed      event.Feed
