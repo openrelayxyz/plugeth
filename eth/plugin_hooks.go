@@ -40,7 +40,7 @@ func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration,
 
 func PluginUpdateBlockchainVMConfig(pl *plugins.PluginLoader, cfg *vm.Config) {
 	tracerList := plugins.Lookup("LiveTracer", func(item interface{}) bool {
-		_, ok := item.(*vm.Tracer)
+		_, ok := item.(core.TracerResult)
 		log.Info("Item is LiveTracer", "ok", ok, "type", reflect.TypeOf(item))
 		return ok
 	})
