@@ -43,8 +43,8 @@ import (
 var FullNodeGPO = gasprice.Config{
 	Blocks:           20,
 	Percentile:       60,
-	MaxHeaderHistory: 0,
-	MaxBlockHistory:  0,
+	MaxHeaderHistory: 1024,
+	MaxBlockHistory:  1024,
 	MaxPrice:         gasprice.DefaultMaxPrice,
 	IgnorePrice:      gasprice.DefaultIgnorePrice,
 }
@@ -83,15 +83,15 @@ var Defaults = Config{
 	TrieTimeout:             60 * time.Minute,
 	SnapshotCache:           102,
 	Miner: miner.Config{
-		GasFloor: 8000000,
 		GasCeil:  8000000,
 		GasPrice: big.NewInt(params.GWei),
 		Recommit: 3 * time.Second,
 	},
-	TxPool:      core.DefaultTxPoolConfig,
-	RPCGasCap:   50000000,
-	GPO:         FullNodeGPO,
-	RPCTxFeeCap: 1, // 1 ether
+	TxPool:        core.DefaultTxPoolConfig,
+	RPCGasCap:     50000000,
+	RPCEVMTimeout: 5 * time.Second,
+	GPO:           FullNodeGPO,
+	RPCTxFeeCap:   1, // 1 ether
 }
 
 func init() {
@@ -188,6 +188,9 @@ type Config struct {
 
 	// RPCGasCap is the global gas cap for eth-call variants.
 	RPCGasCap uint64
+
+	// RPCEVMTimeout is the global timeout for eth-call.
+	RPCEVMTimeout time.Duration
 
 	// RPCTxFeeCap is the global transaction fee(price * gaslimit) cap for
 	// send-transction variants. The unit is ether.
