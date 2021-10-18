@@ -606,10 +606,14 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 		field := ntype.Field(i)
 		v := nval.Elem().FieldByName(field.Name)
 		lv := lval.Elem().FieldByName(field.Name)
-		if v.Type() == lv.Type() && lv.CanSet() {
-			lv.Set(v)
-		} else {
-			convertAndSet(lv, v)
+		log.Info("Checking value for", "field", field.Name)
+		if lv.Kind() != reflect.Invalid {
+			// If core.ChainConfig doesn't have this field, skip it.
+			if v.Type() == lv.Type() && lv.CanSet() {
+				lv.Set(v)
+			} else {
+				convertAndSet(lv, v)
+			}
 		}
 	}
 	return b.chainConfig
