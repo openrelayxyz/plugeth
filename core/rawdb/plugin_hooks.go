@@ -12,6 +12,7 @@ var (
 )
 
 func PluginTrackUpdate(num uint64, kind string, value interface{}) {
+	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
 	update, ok := freezerUpdates[num]
 	if !ok {
 		update = make(map[string]interface{})
@@ -34,6 +35,7 @@ func pluginCommitUpdate(num uint64) {
 }
 
 func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
+	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
 	defer func() { delete(freezerUpdates, num) }()
 	update, ok := freezerUpdates[num]
 	if !ok {
