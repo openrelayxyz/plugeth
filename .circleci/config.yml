@@ -2,9 +2,36 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/go:1.16
+      - image: cimg/go:1.17.2
     steps:
       - checkout
+      - run:
+          name: Prep env
+          command: |
+            mkdir -p /home/circleci/go/src
+            mkdir artifacts
+            go mod tidy
+      - run:
+          name: test rpc
+          command: go test ./rpc/
+      - run:
+          name: test eth
+          command: go test ./eth/
+      - run:
+          name: test eth/tracers
+          command: go test ./eth/tracers/
+      - run:
+          name: test core
+          command: go test ./core/
+      - run:
+          name: test core/vm
+          command: go test ./core/vm/
+      - run:
+          name: test core/state
+          command: go test ./core/state/
+      - run:
+          name: test core/rawdb
+          command: go test ./core/rawdb/
   build_geth_push:
     docker: # run the steps with Docker
       - image: cimg/go:1.17.2 # ...with this image as the primary container
@@ -17,7 +44,7 @@ jobs:
           command: |
             mkdir -p /home/circleci/go/src
             mkdir artifacts
-            go get
+            go mod tidy
       - run:
           name: build geth binaries
           command: |
@@ -41,17 +68,20 @@ jobs:
 
 workflows:
   version: 2
+  test:
+    jobs:
+      - test:
+          filters:
+            tags:
+              ignore: /^v.*/
   build_and_test:
     jobs:
-      # - test:
-      #     filters:  # required since `deploy` has tag filters AND requires `build`
-      #       tags:
-      #         only: /.*/
-      - build_geth_push:
-          # requires:
-          #   - test
+      - test:
           filters:
             tags:
               only: /^v.*/
             branches:
               ignore: /.*/
+      - build_geth_push:
+          requires:
+            - test
