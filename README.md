@@ -1,385 +1,363 @@
-# PluGeth
+## Go Ethereum
 
-PluGeth is a fork of the [Go Ethereum Client](https://github.com/ethereum/go-ethereum)
-(Geth) that implements a plugin architecture, allowing developers to extend
-Geth's  capabilities in a number of different ways using plugins, rather than
-having to create additional, new forks of Geth.
+Official Golang implementation of the Ethereum protocol.
 
-## WARNING: UNSTABLE API
+[![API Reference](
+https://camo.githubusercontent.com/915b7be44ada53c290eb157634330494ebe3e30a/68747470733a2f2f676f646f632e6f72672f6769746875622e636f6d2f676f6c616e672f6764646f3f7374617475732e737667
+)](https://pkg.go.dev/github.com/ethereum/go-ethereum?tab=doc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ethereum/go-ethereum)](https://goreportcard.com/report/github.com/ethereum/go-ethereum)
+[![Travis](https://travis-ci.com/ethereum/go-ethereum.svg?branch=master)](https://travis-ci.com/ethereum/go-ethereum)
+[![Discord](https://img.shields.io/badge/discord-join%20chat-blue.svg)](https://discord.gg/nthXNEv)
 
-Right now PluGeth is in early development. We are still settling on some of the
-plugin APIs, and are not yet making official releases. From an operational
-perspective, PluGeth should be as stable as upstream Geth less whatever
-instability is added by plugins you might run. But if you plan to run PluGeth
-today, be aware that future updates will likely break your plugins.
+Automated builds are available for stable releases and the unstable master branch. Binary
+archives are published at https://geth.ethereum.org/downloads/.
 
-## System Requirements
+## Building the source
 
-System requirements will vary depending on which network you are connecting to.
-On the Ethereum mainnet, you should have at least 8 GB RAM, 2 CPUs, and 350 GB
-of SSD disks.
+For prerequisites and detailed build instructions please read the [Installation Instructions](https://geth.ethereum.org/docs/install-and-build/installing-geth).
 
-PluGeth relies on Golang's Plugin implementation, which is only supported on
-Linux, FreeBSD, and macOS. Windows support is unlikely to be added in the
-foreseeable future.
+Building `geth` requires both a Go (version 1.14 or later) and a C compiler. You can install
+them using your favourite package manager. Once the dependencies are installed, run
 
-## Design Goals
-
-The upstream Geth client exists primarily to serve as a client for the Ethereum
-mainnet, though it also supports a number of popular testnets. Supporting the
-Ethereum mainnet is a big enough challenge in its own right that the Geth team
-generally avoids changes to support other networks, or to provide features only
-a small handful of users would be interested in.
-
-The result is that many projects have forked Geth. Some implement their own
-consensus protocols or alter the behavior of the EVM to support other networks.
-Others are designed to extract information from the Ethereum mainnet in ways
-the standard Geth client does not support.
-
-Creating numerous different forks to fill a variety of different needs comes
-with a number of drawbacks. Forks tend to drift apart from each other. Many
-networks that forked from Geth long ago have stopped merging updates from Geth;
-this makes some sense, given that those networks have moved in different
-directions than Geth and merging upstream changes while properly maintaining
-consensus rules of an existing network could prove quite challenging. But not
-merging changes from upstream can mean that security updates are easily missed,
-especially when the upstream team [obscures security updates as optimizations](https://blog.openrelay.xyz/vulnerability-lifecycle-framework-geth/)
-as a matter of process.
-
-PluGeth aims to provide a single Geth fork that developers can choose to extend
-rather than forking the Geth project. Out of the box, PluGeth behaves exactly
-like upstream Geth, but by installing plugins written in Golang, developers can
-extend its functionality in a wide variety of way.
-
-## Anatomy of a Plugin
-
-Plugins for Plugeth use Golang's [Native Plugin System](https://golang.org/pkg/plugin/).
-Plugin modules must export variables using specific names and types. These will
-be processed by the plugin loader, and invoked at certain points during Geth's
-operations.
-
-### API
-
-#### Flags
-
-* **Name**: Flags
-* **Type**: [flag.FlagSet](https://golang.org/pkg/flag/#FlagSet)
-* **Behavior**: This FlagSet will be parsed and your plugin will be able to
-  access the resulting flags. Note that if any flags are provided, certain
-  checks are disabled within Geth to avoid failing due to unexpected flags.
-
-#### Subcommands
-
-* **Name**: Subcommands
-* **Type**: map[string]func(ctx [*cli.Context](https://pkg.go.dev/github.com/urfave/cli#Context), args []string) error
-* **Behavior**: If Geth is invoked with `geth YOUR_COMMAND`, the plugin loader
-  will look for `YOUR_COMMAND` within this map, and invoke the corresponding
-  function. This can be useful for certain behaviors like manipulating Geth's
-  database without having to build a separate binary.
-
-
-#### Initialize
-
-* **Name**: Initialize
-* **Type**: func(*cli.Context, *PluginLoader)
-* **Behavior**: Called as soon as the plugin is loaded, with the cli context
-  and a reference to the plugin loader. This is your plugin's opportunity to
-  initialize required variables as needed. Note that using the context object
-  you can check arguments, and optionally can manipulate arguments if needed
-  for your plugin.
-
-#### InitializeNode
-
-* **Name**: InitializeNode
-* **Type**: func(*node.Node, interfaces.Backend)
-* **Behavior**: This is called as soon as the Geth node is initialized. The
- `*node.Node` object represents the running node with p2p and RPC capabilities,
- while the Backend gives you access to a wide array of data you may need to
- access.
-
-#### Tracers
-
-* **Name**: Tracer
-* **Type**: map[string]TracerResult
-* **Behavior**: When calling debug.traceX functions (such as debug_traceCall
-  and debug_traceTransaction) the tracer can be specified as a key to this map
-  and the tracer used  will be the TracerResult specified here. TracerResult
-  objects must match the interface:
-
-```
-// CaptureStart is called at the start of each transaction
-CaptureStart(env *vm.EVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {}
-// CaptureState is called for each opcode
-CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {}
-// CaptureFault is called when an error occurs in the EVM
-CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {}
-// CaptureEnd is called at the end of each transaction
-CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {}
-// GetResult should return a JSON serializable result object to respond to the trace call
-GetResult() (interface{}, error) {}
-
+```shell
+make geth
 ```
 
-* **Caution**: Modifying of the values passed into tracer functions can alter
-  the results of the EVM execution in unpredictable ways. Additionally, some
-  objects may be reused across calls, so data you wish to capture should be
-  copied rather than retained by reference.
+or, to build the full suite of utilities:
 
-#### LiveTracer
-
-* **Name**: LiveTracer
-* **Type**: vm.Tracer
-* **Behavior**: This tracer is used for tracing transactions as they are
-  processed within blocks. Note that if a block does not validate, some
-  transactions may be processed that don't end up in blocks, so be sure to
-  check transactions against finalized blocks.
-
-The interface for a vm.Tracer is similar to a TracerResult (above), but does
-not require a `GetResult()` function.
-
-#### GetAPIs
-
-* **Name**: GetAPIs
-* **Type**: func(*node.Node, interfaces.Backend) []rpc.API
-* **Behavior**: This allows you to register new RPC methods to run within Geth.
-* **Example**:
-
-The GetAPIs function itself will generally be fairly brief, and will looks
-something like this:
-
+```shell
+make all
 ```
-func GetAPIs(stack *node.Node, backend plugins.Backend) []rpc.API {
-  return []rpc.API{
-   {
-     Namespace: "mynamespace",
-     Version:	 "1.0",
-     Service:	 &MyService{backend},
-     Public:		true,
-   },
- }
+
+## Executables
+
+The go-ethereum project comes with several wrappers/executables found in the `cmd`
+directory.
+
+|    Command    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| :-----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  **`geth`**   | Our main Ethereum CLI client. It is the entry point into the Ethereum network (main-, test- or private net), capable of running as a full node (default), archive node (retaining all historical state) or a light node (retrieving data live). It can be used by other processes as a gateway into the Ethereum network via JSON RPC endpoints exposed on top of HTTP, WebSocket and/or IPC transports. `geth --help` and the [CLI page](https://geth.ethereum.org/docs/interface/command-line-options) for command line options.          |
+|   `clef`    | Stand-alone signing tool, which can be used as a backend signer for `geth`.  |
+|   `devp2p`    | Utilities to interact with nodes on the networking layer, without running a full blockchain. |
+|   `abigen`    | Source code generator to convert Ethereum contract definitions into easy to use, compile-time type-safe Go packages. It operates on plain [Ethereum contract ABIs](https://docs.soliditylang.org/en/develop/abi-spec.html) with expanded functionality if the contract bytecode is also available. However, it also accepts Solidity source files, making development much more streamlined. Please see our [Native DApps](https://geth.ethereum.org/docs/dapp/native-bindings) page for details. |
+|  `bootnode`   | Stripped down version of our Ethereum client implementation that only takes part in the network node discovery protocol, but does not run any of the higher level application protocols. It can be used as a lightweight bootstrap node to aid in finding peers in private networks.                                                                                                                                                                                                                                                                 |
+|     `evm`     | Developer utility version of the EVM (Ethereum Virtual Machine) that is capable of running bytecode snippets within a configurable environment and execution mode. Its purpose is to allow isolated, fine-grained debugging of EVM opcodes (e.g. `evm --code 60ff60ff --debug run`).                                                                                                                                                                                                                                                                     |
+|   `rlpdump`   | Developer utility tool to convert binary RLP ([Recursive Length Prefix](https://eth.wiki/en/fundamentals/rlp)) dumps (data encoding used by the Ethereum protocol both network as well as consensus wise) to user-friendlier hierarchical representation (e.g. `rlpdump --hex CE0183FFFFFFC4C304050583616263`).                                                                                                                                                                                                                                 |
+|   `puppeth`   | a CLI wizard that aids in creating a new Ethereum network.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+
+## Running `geth`
+
+Going through all the possible command line flags is out of scope here (please consult our
+[CLI Wiki page](https://geth.ethereum.org/docs/interface/command-line-options)),
+but we've enumerated a few common parameter combos to get you up to speed quickly
+on how you can run your own `geth` instance.
+
+### Full node on the main Ethereum network
+
+By far the most common scenario is people wanting to simply interact with the Ethereum
+network: create accounts; transfer funds; deploy and interact with contracts. For this
+particular use-case the user doesn't care about years-old historical data, so we can
+fast-sync quickly to the current state of the network. To do so:
+
+```shell
+$ geth console
+```
+
+This command will:
+ * Start `geth` in snap sync mode (default, can be changed with the `--syncmode` flag),
+   causing it to download more data in exchange for avoiding processing the entire history
+   of the Ethereum network, which is very CPU intensive.
+ * Start up `geth`'s built-in interactive [JavaScript console](https://geth.ethereum.org/docs/interface/javascript-console),
+   (via the trailing `console` subcommand) through which you can interact using [`web3` methods](https://web3js.readthedocs.io/) 
+   (note: the `web3` version bundled within `geth` is very old, and not up to date with official docs),
+   as well as `geth`'s own [management APIs](https://geth.ethereum.org/docs/rpc/server).
+   This tool is optional and if you leave it out you can always attach to an already running
+   `geth` instance with `geth attach`.
+
+### A Full node on the Görli test network
+
+Transitioning towards developers, if you'd like to play around with creating Ethereum
+contracts, you almost certainly would like to do that without any real money involved until
+you get the hang of the entire system. In other words, instead of attaching to the main
+network, you want to join the **test** network with your node, which is fully equivalent to
+the main network, but with play-Ether only.
+
+```shell
+$ geth --goerli console
+```
+
+The `console` subcommand has the exact same meaning as above and they are equally
+useful on the testnet too. Please, see above for their explanations if you've skipped here.
+
+Specifying the `--goerli` flag, however, will reconfigure your `geth` instance a bit:
+
+ * Instead of connecting the main Ethereum network, the client will connect to the Görli
+   test network, which uses different P2P bootnodes, different network IDs and genesis
+   states.
+ * Instead of using the default data directory (`~/.ethereum` on Linux for example), `geth`
+   will nest itself one level deeper into a `goerli` subfolder (`~/.ethereum/goerli` on
+   Linux). Note, on OSX and Linux this also means that attaching to a running testnet node
+   requires the use of a custom endpoint since `geth attach` will try to attach to a
+   production node endpoint by default, e.g.,
+   `geth attach <datadir>/goerli/geth.ipc`. Windows users are not affected by
+   this.
+
+*Note: Although there are some internal protective measures to prevent transactions from
+crossing over between the main network and test network, you should make sure to always
+use separate accounts for play-money and real-money. Unless you manually move
+accounts, `geth` will by default correctly separate the two networks and will not make any
+accounts available between them.*
+
+### Full node on the Rinkeby test network
+
+Go Ethereum also supports connecting to the older proof-of-authority based test network
+called [*Rinkeby*](https://www.rinkeby.io) which is operated by members of the community.
+
+```shell
+$ geth --rinkeby console
+```
+
+### Full node on the Ropsten test network
+
+In addition to Görli and Rinkeby, Geth also supports the ancient Ropsten testnet. The
+Ropsten test network is based on the Ethash proof-of-work consensus algorithm. As such,
+it has certain extra overhead and is more susceptible to reorganization attacks due to the
+network's low difficulty/security.
+
+```shell
+$ geth --ropsten console
+```
+
+*Note: Older Geth configurations store the Ropsten database in the `testnet` subdirectory.*
+
+### Configuration
+
+As an alternative to passing the numerous flags to the `geth` binary, you can also pass a
+configuration file via:
+
+```shell
+$ geth --config /path/to/your_config.toml
+```
+
+To get an idea how the file should look like you can use the `dumpconfig` subcommand to
+export your existing configuration:
+
+```shell
+$ geth --your-favourite-flags dumpconfig
+```
+
+*Note: This works only with `geth` v1.6.0 and above.*
+
+#### Docker quick start
+
+One of the quickest ways to get Ethereum up and running on your machine is by using
+Docker:
+
+```shell
+docker run -d --name ethereum-node -v /Users/alice/ethereum:/root \
+           -p 8545:8545 -p 30303:30303 \
+           ethereum/client-go
+```
+
+This will start `geth` in fast-sync mode with a DB memory allowance of 1GB just as the
+above command does.  It will also create a persistent volume in your home directory for
+saving your blockchain as well as map the default ports. There is also an `alpine` tag
+available for a slim version of the image.
+
+Do not forget `--http.addr 0.0.0.0`, if you want to access RPC from other containers
+and/or hosts. By default, `geth` binds to the local interface and RPC endpoints is not
+accessible from the outside.
+
+### Programmatically interfacing `geth` nodes
+
+As a developer, sooner rather than later you'll want to start interacting with `geth` and the
+Ethereum network via your own programs and not manually through the console. To aid
+this, `geth` has built-in support for a JSON-RPC based APIs ([standard APIs](https://eth.wiki/json-rpc/API)
+and [`geth` specific APIs](https://geth.ethereum.org/docs/rpc/server)).
+These can be exposed via HTTP, WebSockets and IPC (UNIX sockets on UNIX based
+platforms, and named pipes on Windows).
+
+The IPC interface is enabled by default and exposes all the APIs supported by `geth`,
+whereas the HTTP and WS interfaces need to manually be enabled and only expose a
+subset of APIs due to security reasons. These can be turned on/off and configured as
+you'd expect.
+
+HTTP based JSON-RPC API options:
+
+  * `--http` Enable the HTTP-RPC server
+  * `--http.addr` HTTP-RPC server listening interface (default: `localhost`)
+  * `--http.port` HTTP-RPC server listening port (default: `8545`)
+  * `--http.api` API's offered over the HTTP-RPC interface (default: `eth,net,web3`)
+  * `--http.corsdomain` Comma separated list of domains from which to accept cross origin requests (browser enforced)
+  * `--ws` Enable the WS-RPC server
+  * `--ws.addr` WS-RPC server listening interface (default: `localhost`)
+  * `--ws.port` WS-RPC server listening port (default: `8546`)
+  * `--ws.api` API's offered over the WS-RPC interface (default: `eth,net,web3`)
+  * `--ws.origins` Origins from which to accept websockets requests
+  * `--ipcdisable` Disable the IPC-RPC server
+  * `--ipcapi` API's offered over the IPC-RPC interface (default: `admin,debug,eth,miner,net,personal,shh,txpool,web3`)
+  * `--ipcpath` Filename for IPC socket/pipe within the datadir (explicit paths escape it)
+
+You'll need to use your own programming environments' capabilities (libraries, tools, etc) to
+connect via HTTP, WS or IPC to a `geth` node configured with the above flags and you'll
+need to speak [JSON-RPC](https://www.jsonrpc.org/specification) on all transports. You
+can reuse the same connection for multiple requests!
+
+**Note: Please understand the security implications of opening up an HTTP/WS based
+transport before doing so! Hackers on the internet are actively trying to subvert
+Ethereum nodes with exposed APIs! Further, all browser tabs can access locally
+running web servers, so malicious web pages could try to subvert locally available
+APIs!**
+
+### Operating a private network
+
+Maintaining your own private network is more involved as a lot of configurations taken for
+granted in the official networks need to be manually set up.
+
+#### Defining the private genesis state
+
+First, you'll need to create the genesis state of your networks, which all nodes need to be
+aware of and agree upon. This consists of a small JSON file (e.g. call it `genesis.json`):
+
+```json
+{
+  "config": {
+    "chainId": <arbitrary positive integer>,
+    "homesteadBlock": 0,
+    "eip150Block": 0,
+    "eip155Block": 0,
+    "eip158Block": 0,
+    "byzantiumBlock": 0,
+    "constantinopleBlock": 0,
+    "petersburgBlock": 0,
+    "istanbulBlock": 0,
+    "berlinBlock": 0,
+    "londonBlock": 0
+  },
+  "alloc": {},
+  "coinbase": "0x0000000000000000000000000000000000000000",
+  "difficulty": "0x20000",
+  "extraData": "",
+  "gasLimit": "0x2fefd8",
+  "nonce": "0x0000000000000042",
+  "mixhash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp": "0x00"
 }
 ```
 
-The bulk of the implementation will be in the `MyService` struct. MyService
-should be a struct with public functions. These functions can have two
-different types of signatures:
+The above fields should be fine for most purposes, although we'd recommend changing
+the `nonce` to some random value so you prevent unknown remote nodes from being able
+to connect to you. If you'd like to pre-fund some accounts for easier testing, create
+the accounts and populate the `alloc` field with their addresses.
 
-* RPC Calls: For straight RPC calls, a function should have a `context.Context`
-  object as the first argument, followed by an arbitrary number of JSON
-  marshallable arguments, and return either a single JSON marshal object, or a
-  JSON marshallable object and an error. The RPC framework will take care of
-  decoding inputs to this function and encoding outputs, and if the error is
-  non-nil it will serve an error response.
-* Subscriptions: For subscriptions (supported on IPC and websockets), a
-  function should have a `context.Context` object as the first argument
-  followed by an arbitrary number of JSON marshallable arguments, and should
-  return an `*rpc.Subscription` object. The subscription object can be created
-  with `rpcSub := notifier.CreateSubscription()`, and JSON marshallable data
-  can be sent to the subscriber with `notifier.Notify(rpcSub.ID, b)`.
-
-A very simple MyService might look like:
-
-```
-type MyService struct{}
-
-func (h *MyService) HelloWorld(ctx context.Context) string {
-  return "Hello World"
-}
-```
-
-And the client could then access this with an rpc call to `mynaespace_helloWorld`.
-
-
-#### PreProcessBlock
-* **Name**: PreProcessBlock
-* **Type**: func(*types.Block)
-* **Behavior**: Invoked before the transactions of a block are processed.
-
-#### PreProcessTransaction
-* **Name**: PreProcessTransaction
-* **Type**: func(*types.Transaction, *types.Block, int)
-* **Behavior**: Invoked before each individual transaction of a block is
-  processed.
-
-#### BlockProcessingError
-* **Name**: BlockProcessingError
-* **Type**: func(*types.Transaction, *types.Block, error)
-* **Behavior**: Invoked if an error occurs while processing a transaction. This
-  only applies to errors that would invalidate the block were this transaction
-  included, not errors such as reverts or opcode errors.
-
-#### PostProcessTransaction
-* **Name**: PostProcessTransaction
-* **Type**: func(*types.Transaction, *types.Block, int, *types.Receipt)
-* **Behavior**: Invoked after each individual transaction of a block is processed.
-
-#### PostProcessBlock
-* **Name**: PostProcessBlock
-* **Type**: func(*types.Block)
-* **Behavior**: Invoked after all transactions of a block are processed. Note
-  that this does not mean that the block can be considered canonical - it may
-  end up being uncled or side-chained. You should rely on `NewHead` to
-  determine which blocks are canonical.
-
-#### NewHead
-* **Name**: NewHead
-* **Type**: func(*types.Block, common.Hash, []*types.Log)
-* **Behavior**: Invoked when a new block becomes the canonical latest block.
-  Note that if several blocks are processed in a group (such as during a reorg)
-  this may not be called for each block. You should track the prior latest head
-  if you need to process intermediate blocks.
-
-#### NewSideBlock
-* **Name**: NewSideBlock
-* **Type**: func(*types.Block, common.Hash, []*types.Log)
-* **Behavior**: Invoked when a block is side-chained. Blocks passed to this
-  method are non-canonical blocks
-
-#### Reorg
-* **Name**: Reorg
-* **Type**: func(common *types.Block, oldChain, newChain types.Blocks)
-* **Behavior**: Invoked when a chain reorg occurs (at least one block is
-  removed and one block is added). `oldChain` is a list of removed blocks,
-  `newChain` is a list of newly added blocks, and `common` is the latest block
-  that is an ancestor to both oldChain and newChain.
-
-#### StateUpdate
-* **Name**: StateUpdate
-* **Type**: func(root common.Hash, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte)
-* **Behavior**: Invoked for each new block, StateUpdate provides the changes to
-  the blockchain state. `root` corresponds to the state root of the new block.
-  `parentRoot` corresponds to the state root of the parent block. `destructs`
-  serves as a set of accounts that self-destructed in this block. `accounts`
-  maps the hash of each account address to the SlimRLP encoding of the account
-  data. `storage` maps the hash of each account to a map of that account's
-  stored data.
-* **Warning**: StateUpdate is only called if Geth is running with
-  `--snapshot=true`. This is the default behavior for Geth, but if you are
-  explicitly running with `--snapshot=false` this function will not be invoked.
-
-#### AppendAncient
-* **Name**: AppendAncient
-* **Type**: func(number uint64, hash, header, body, receipts, td []byte)
-* **Behavior**: Invoked when the freezer moves a block from LevelDB to the
-  ancients database. `number` is the number of the block. `hash` is the 32 byte
-  hash of the block as a raw `[]byte`. `header`, `body`, and `receipts` are the
-  RLP encoded versions of their respective block elements. `td` is the byte
-  encoded total difficulty of the block.
-
-
-## Extending The Plugin API
-
-When extending the plugin API, a primary concern is leaving a minimal footprint
-in the core Geth codebase to avoid future merge conflicts. To achieve this,
-when we want to add a hook within some existing Geth code, we create a
-`plugin_hooks.go` in the same package. For example, in the core/rawdb package
-we have:
-
-```
-// This file is part of the package we are adding hooks to
-package rawdb
-
-// Import whatever is necessary
-import (
-  "github.com/ethereum/go-ethereum/plugins"
-  "github.com/ethereum/go-ethereum/log"
-)
-
-
-// PluginAppendAncient is the public plugin hook function, available for testing
-func PluginAppendAncient(pl *plugins.PluginLoader, number uint64, hash, header, body, receipts, td []byte) {
-  fnList := pl.Lookup("AppendAncient", func(item interface{}) bool {
-    _, ok := item.(func(number uint64, hash, header, body, receipts, td []byte))
-    return ok
-  })
-  for _, fni := range fnList {
-    if fn, ok := fni.(func(number uint64, hash, header, body, receipts, td []byte)); ok {
-      fn(number, hash, header, body, receipts, td)
-    }
+```json
+"alloc": {
+  "0x0000000000000000000000000000000000000001": {
+    "balance": "111111111"
+  },
+  "0x0000000000000000000000000000000000000002": {
+    "balance": "222222222"
   }
 }
-
-// pluginAppendAncient is the private plugin hook function
-func pluginAppendAncient(number uint64, hash, header, body, receipts, td []byte) {
-  if plugins.DefaultPluginLoader == nil {
-		log.Warn("Attempting AppendAncient, but default PluginLoader has not been initialized")
-    return
-  }
-  PluginAppendAncient(plugins.DefaultPluginLoader, number, hash, header, body, receipts, td)
-}
 ```
 
-### The Public Plugin Hook Function
+With the genesis state defined in the above JSON file, you'll need to initialize **every**
+`geth` node with it prior to starting it up to ensure all blockchain parameters are correctly
+set:
 
-The public plugin hook function should follow the naming convention
-`Plugin$HookName`. The first argument should be a *plugins.PluginLoader,
-followed by any arguments required by the functions to be provided by nay
-plugins implementing this hook.
+```shell
+$ geth init path/to/genesis.json
+```
 
-The plugin hook function should use `PluginLoader.Lookup("$HookName", func(item interface{}) bool`
-to get a list of the plugin-provided functions to be invoked. The provided
-function should verify that the provided function implements the expected
-interface. After the first time a given hook is looked up through the plugin
-loader, the PluginLoader will cache references to those hooks.
+#### Creating the rendezvous point
 
-Given the function list provided by the plugin loader, the public plugin hook
-function should iterate over the list, cast the elements to the appropriate
-type, and call the function with the provided arguments.
+With all nodes that you want to run initialized to the desired genesis state, you'll need to
+start a bootstrap node that others can use to find each other in your network and/or over
+the internet. The clean way is to configure and run a dedicated bootnode:
 
-Unless there is a clear justification to the contrary, the function should be
-called in the current goroutine. Plugins may choose to spawn off a separate
-goroutine as appropriate, but for the sake of thread safety we should generally
-not assume that plugins will be implemented in a threadsafe manner. If a plugin
-degrades the performance of Geth significantly, that will generally be obvious,
-and plugin authors can take appropriate measures to improve performance. If a
-plugin introduces thread safety issues, those can go unnoticed during testing.
+```shell
+$ bootnode --genkey=boot.key
+$ bootnode --nodekey=boot.key
+```
 
-### The Private Plugin Hook Function
+With the bootnode online, it will display an [`enode` URL](https://eth.wiki/en/fundamentals/enode-url-format)
+that other nodes can use to connect to it and exchange peer information. Make sure to
+replace the displayed IP address information (most probably `[::]`) with your externally
+accessible IP to get the actual `enode` URL.
 
-The private plugin hook function should bear the same name as the public plugin
-hook function, but with a lower case first letter. The signature should match
-the public plugin hook function, except that the first argument referencing the
-PluginLoader should be removed. It should invoke the public plugin hook
-function on `plugins.DefaultPluginLoader`. It should always verify that the
-DefaultPluginLoader is non-nil, log warning and return if the
-DefaultPluginLoader has not been initialized.
+*Note: You could also use a full-fledged `geth` node as a bootnode, but it's the less
+recommended way.*
 
-### In-Line Invocation
+#### Starting up your member nodes
 
-Within the Geth codebase, the private plugin hook function should be invoked
-with the appropriate arguments in a single line, to minimize unexpected
-conflicts merging the upstream geth codebase into plugeth.
+With the bootnode operational and externally reachable (you can try
+`telnet <ip> <port>` to ensure it's indeed reachable), start every subsequent `geth`
+node pointed to the bootnode for peer discovery via the `--bootnodes` flag. It will
+probably also be desirable to keep the data directory of your private network separated, so
+do also specify a custom `--datadir` flag.
 
-### Contact Us
+```shell
+$ geth --datadir=path/to/custom/data/folder --bootnodes=<bootnode-enode-url-from-above>
+```
 
-While we can imagine lots of ways plugins might like to extract or change
-information in Geth, we're trying not to go too crazy with the plugin API based
-purely on hypotheticals. The Plugin API in its current form reflects the needs
-of projects currently building on PluGeth, and we're happy to extend it for
-people who are building something. If you're trying to do something that isn't
-supported by the current plugin system, we're happy to help. Reach out to us on
-[Discord](https://discord.gg/Epf7b7Gr) and we'll help you figure out how to
-make it work.
+*Note: Since your network will be completely cut off from the main and test networks, you'll
+also need to configure a miner to process transactions and create new blocks for you.*
 
-# Licensing Considerations
+#### Running a private miner
 
-The Geth codebase is licensed under the LGPL. By linking with Geth, you have an
-obligation to enable anyone you provide your plugin binaries to run against
-their own modified versions of Geth. Because of how Golang plugins work
-running against updated versions of Geth may require recompiling the plugin.
+Mining on the public Ethereum network is a complex task as it's only feasible using GPUs,
+requiring an OpenCL or CUDA enabled `ethminer` instance. For information on such a
+setup, please consult the [EtherMining subreddit](https://www.reddit.com/r/EtherMining/)
+and the [ethminer](https://github.com/ethereum-mining/ethminer) repository.
 
-If you plan to license your plugin under the LGPL or a more permissive license,
-you should be able to meet these requirements. If you plan to use your plugin
-privately without distributing it, you should be fine. If you plan to release
-your plugin without making the source available, you may find yourself in
-violation of Geth's license unless you can provide a way to relink it against
-more recent versions of Geth.
+In a private network setting, however a single CPU miner instance is more than enough for
+practical purposes as it can produce a stable stream of blocks at the correct intervals
+without needing heavy resources (consider running on a single thread, no need for multiple
+ones either). To start a `geth` instance for mining, run it with all your usual flags, extended
+by:
 
-# Existing Plugins
+```shell
+$ geth <usual-flags> --mine --miner.threads=1 --miner.etherbase=0x0000000000000000000000000000000000000000
+```
 
-We currently provide the following plugins:
+Which will start mining blocks and transactions on a single CPU thread, crediting all
+proceedings to the account specified by `--miner.etherbase`. You can further tune the mining
+by changing the default gas limit blocks converge to (`--miner.targetgaslimit`) and the price
+transactions are accepted at (`--miner.gasprice`).
 
-* [BlockUpdates](./plugins/packages/blockupdates/main.go): A good reference
-  plugin, which leverages several hooks to provide a new BlockUpdates hook,
-  which plugins can use to get more cohesive updates about new blocks than can
-  easily be achieved with the standard PluGeth hooks.
+## Contribution
+
+Thank you for considering to help out with the source code! We welcome contributions
+from anyone on the internet, and are grateful for even the smallest of fixes!
+
+If you'd like to contribute to go-ethereum, please fork, fix, commit and send a pull request
+for the maintainers to review and merge into the main code base. If you wish to submit
+more complex changes though, please check up with the core devs first on [our Discord Server](https://discord.gg/invite/nthXNEv)
+to ensure those changes are in line with the general philosophy of the project and/or get
+some early feedback which can make both your efforts much lighter as well as our review
+and merge procedures quick and simple.
+
+Please make sure your contributions adhere to our coding guidelines:
+
+ * Code must adhere to the official Go [formatting](https://golang.org/doc/effective_go.html#formatting)
+   guidelines (i.e. uses [gofmt](https://golang.org/cmd/gofmt/)).
+ * Code must be documented adhering to the official Go [commentary](https://golang.org/doc/effective_go.html#commentary)
+   guidelines.
+ * Pull requests need to be based on and opened against the `master` branch.
+ * Commit messages should be prefixed with the package(s) they modify.
+   * E.g. "eth, rpc: make trace configs optional"
+
+Please see the [Developers' Guide](https://geth.ethereum.org/docs/developers/devguide)
+for more details on configuring your environment, managing project dependencies, and
+testing procedures.
+
+## License
+
+The go-ethereum library (i.e. all code outside of the `cmd` directory) is licensed under the
+[GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html),
+also included in our repository in the `COPYING.LESSER` file.
+
+The go-ethereum binaries (i.e. all code inside of the `cmd` directory) is licensed under the
+[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also
+included in our repository in the `COPYING` file.
