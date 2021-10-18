@@ -15,11 +15,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/downloader"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/plugins/interfaces"
+	// "github.com/ethereum/go-ethereum/plugins/interfaces"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/openrelayxyz/plugeth-utils/core"
@@ -101,6 +101,10 @@ func (w WrappedTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, c
 func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	w.r.CaptureEnd(output, gasUsed, t, err)
 }
+
+// TODO: Align these with PluGeth-utils
+func (w WrappedTracer) CaptureEnter(vm.OpCode, common.Address, common.Address, []byte, uint64, *big.Int) {}
+func (w WrappedTracer) CaptureExit([]byte, uint64, error) {}
 func (w WrappedTracer) GetResult() (interface{}, error) {
 	return w.r.Result()
 }
@@ -218,7 +222,7 @@ func (n *Node) Attach() (core.Client, error) {
 }
 
 type Backend struct {
-	b               interfaces.Backend
+	b               ethapi.Backend
 	newTxsFeed      event.Feed
 	newTxsOnce      sync.Once
 	chainFeed       event.Feed
@@ -236,7 +240,7 @@ type Backend struct {
 	chainConfig     *params.ChainConfig
 }
 
-func NewBackend(b interfaces.Backend) *Backend {
+func NewBackend(b ethapi.Backend) *Backend {
 	return &Backend{b: b}
 }
 
@@ -379,8 +383,12 @@ func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash) ([][]byte, e
 	return encLogs, nil
 } // []RLP encoded logs
 
+type dli interface {
+	SyncProgress() ethereum.SyncProgress
+}
+
 type dl struct {
-	dl *downloader.Downloader
+	dl dli
 }
 
 type progress struct {
@@ -404,11 +412,11 @@ func (p *progress) KnownStates() uint64 {
 }
 
 func (d *dl) Progress() core.Progress {
-	return &progress{d.dl.Progress()}
+	return &progress{d.dl.SyncProgress()}
 }
 
 func (b *Backend) Downloader() core.Downloader {
-	return &dl{b.b.Downloader()}
+	return &dl{b.b}
 }
 
 func (b *Backend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) core.Subscription {

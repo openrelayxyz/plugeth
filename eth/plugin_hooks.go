@@ -37,6 +37,9 @@ func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration,
 		tracer.CaptureEnd(output, gasUsed, t, err)
 	}
 }
+// TODO: Align these with PluGeth-utils
+func (mt *metaTracer) CaptureEnter(vm.OpCode, common.Address, common.Address, []byte, uint64, *big.Int) {}
+func (mt *metaTracer) CaptureExit([]byte, uint64, error) {}
 
 func PluginUpdateBlockchainVMConfig(pl *plugins.PluginLoader, cfg *vm.Config) {
 	tracerList := plugins.Lookup("LiveTracer", func(item interface{}) bool {
