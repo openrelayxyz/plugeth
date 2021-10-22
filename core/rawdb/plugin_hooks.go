@@ -5,13 +5,17 @@ import (
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
+	"sync"
 )
 
 var (
 	freezerUpdates map[uint64]map[string]interface{}
+	lock sync.Mutex
 )
 
 func PluginTrackUpdate(num uint64, kind string, value interface{}) {
+	lock.Lock()
+	defer lock.Unlock()
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
 	update, ok := freezerUpdates[num]
 	if !ok {
@@ -20,11 +24,6 @@ func PluginTrackUpdate(num uint64, kind string, value interface{}) {
 	}
 	update[kind] = value
 }
-
-func PluginResetUpdate(num uint64) {
-	delete(freezerUpdates, num)
-}
-
 
 func pluginCommitUpdate(num uint64) {
 	if plugins.DefaultPluginLoader == nil {
@@ -35,6 +34,8 @@ func pluginCommitUpdate(num uint64) {
 }
 
 func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
+	lock.Lock()
+	defer lock.Unlock()
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
 	defer func() { delete(freezerUpdates, num) }()
 	update, ok := freezerUpdates[num]
