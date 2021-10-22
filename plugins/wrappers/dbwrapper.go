@@ -1,6 +1,7 @@
 package wrappers
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
 )
@@ -19,7 +20,8 @@ func (d *dbWrapper) HasAncient(kind string, number uint64) (bool, error) { retur
 func (d *dbWrapper) Ancient(kind string, number uint64) ([]byte, error) { return d.db.Ancient(kind, number) }
 func (d *dbWrapper) Ancients() (uint64, error) { return d.db.Ancients() }
 func (d *dbWrapper) AncientSize(kind string) (uint64, error) { return d.db.AncientSize(kind) }
-func (d *dbWrapper) AppendAncient(number uint64, hash, header, body, receipt, td []byte) error { return d.db.AppendAncient(number, hash, header, body, receipt, td) }
+func (d *dbWrapper) AppendAncient(number uint64, hash, header, body, receipt, td []byte) error { return fmt.Errorf("AppendAncient is no longer supported in geth 1.10.9 and above. Use ModifyAncients instead.") }
+func (d *dbWrapper) ModifyAncients(fn func(ethdb.AncientWriteOp) error) (int64, error) { return d.db.ModifyAncients(fn) }
 func (d *dbWrapper) TruncateAncients(n uint64) error { return d.db.TruncateAncients(n) }
 func (d *dbWrapper) Sync() error { return d.db.Sync() }
 func (d *dbWrapper) Close() error { return d.db.Close() }

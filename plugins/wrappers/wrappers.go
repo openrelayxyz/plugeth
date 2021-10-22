@@ -15,11 +15,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
-	"github.com/ethereum/go-ethereum/eth/downloader"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
-	"github.com/ethereum/go-ethereum/plugins/interfaces"
+	// "github.com/ethereum/go-ethereum/plugins/interfaces"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/openrelayxyz/plugeth-utils/core"
@@ -224,7 +224,7 @@ func (n *Node) Attach() (core.Client, error) {
 }
 
 type Backend struct {
-	b               interfaces.Backend
+	b               ethapi.Backend
 	newTxsFeed      event.Feed
 	newTxsOnce      sync.Once
 	chainFeed       event.Feed
@@ -242,7 +242,7 @@ type Backend struct {
 	chainConfig     *params.ChainConfig
 }
 
-func NewBackend(b interfaces.Backend) *Backend {
+func NewBackend(b ethapi.Backend) *Backend {
 	return &Backend{b: b}
 }
 
@@ -385,8 +385,12 @@ func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash) ([][]byte, e
 	return encLogs, nil
 } // []RLP encoded logs
 
+type dli interface {
+	SyncProgress() ethereum.SyncProgress
+}
+
 type dl struct {
-	dl *downloader.Downloader
+	dl dli
 }
 
 type progress struct {
@@ -410,11 +414,11 @@ func (p *progress) KnownStates() uint64 {
 }
 
 func (d *dl) Progress() core.Progress {
-	return &progress{d.dl.Progress()}
+	return &progress{d.dl.SyncProgress()}
 }
 
 func (b *Backend) Downloader() core.Downloader {
-	return &dl{b.b.Downloader()}
+	return &dl{b.b}
 }
 
 func (b *Backend) SubscribeNewTxsEvent(ch chan<- core.NewTxsEvent) core.Subscription {
@@ -604,10 +608,14 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 		field := ntype.Field(i)
 		v := nval.Elem().FieldByName(field.Name)
 		lv := lval.Elem().FieldByName(field.Name)
-		if v.Type() == lv.Type() && lv.CanSet() {
-			lv.Set(v)
-		} else {
-			convertAndSet(lv, v)
+		log.Info("Checking value for", "field", field.Name)
+		if lv.Kind() != reflect.Invalid {
+			// If core.ChainConfig doesn't have this field, skip it.
+			if v.Type() == lv.Type() && lv.CanSet() {
+				lv.Set(v)
+			} else {
+				convertAndSet(lv, v)
+			}
 		}
 	}
 	return b.chainConfig

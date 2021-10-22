@@ -14,8 +14,23 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package deps contains the console JavaScript dependencies Go embedded.
-package deps
+//go:build !windows && !js
+// +build !windows,!js
 
-//go:generate go-bindata -nometadata -pkg deps -o bindata.go bignumber.js
-//go:generate gofmt -w -s bindata.go
+package metrics
+
+import (
+	syscall "golang.org/x/sys/unix"
+
+	"github.com/ethereum/go-ethereum/log"
+)
+
+// getProcessCPUTime retrieves the process' CPU time since program startup.
+func getProcessCPUTime() int64 {
+	var usage syscall.Rusage
+	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &usage); err != nil {
+		log.Warn("Failed to retrieve CPU time", "err", err)
+		return 0
+	}
+	return int64(usage.Utime.Sec+usage.Stime.Sec)*100 + int64(usage.Utime.Usec+usage.Stime.Usec)/10000 //nolint:unconvert
+}
