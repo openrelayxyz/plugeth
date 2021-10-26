@@ -101,10 +101,12 @@ func (w WrappedTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, c
 func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	w.r.CaptureEnd(output, gasUsed, t, err)
 }
-
-// TODO: Align these with PluGeth-utils
-func (w WrappedTracer) CaptureEnter(vm.OpCode, common.Address, common.Address, []byte, uint64, *big.Int) {}
-func (w WrappedTracer) CaptureExit([]byte, uint64, error) {}
+func (w WrappedTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
+	w.r.CaptureEnter(core.OpCode(typ), core.Address(from), core.Address(to), input, gas, value)
+}
+func (w WrappedTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
+	w.r.CaptureExit(output, gasUsed, err)
+}
 func (w WrappedTracer) GetResult() (interface{}, error) {
 	return w.r.Result()
 }
