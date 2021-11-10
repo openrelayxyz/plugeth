@@ -1019,6 +1019,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 				return nil, err
 			}
 		}
+		
 		// Constuct the JavaScript tracer to execute with
 		if tracer, err = New(*config.Tracer, txctx); err != nil {
 			return nil, err
