@@ -63,6 +63,7 @@ func (r *serviceRegistry) registerName(name string, rcvr interface{}) error {
 		return fmt.Errorf("no service name for type %s", rcvrVal.Type().String())
 	}
 	callbacks := suitableCallbacks(rcvrVal)
+	pluginExtendedCallbacks(callbacks, rcvrVal)
 	if len(callbacks) == 0 {
 		return fmt.Errorf("service %T doesn't have any suitable methods/subscriptions to expose", rcvr)
 	}

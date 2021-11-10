@@ -7,7 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/plugins/interfaces"
-	"github.com/ethereum/go-ethereum/plugins/wrappers"
+	"github.com/ethereum/go-ethereum/plugins/wrappers/statedbandtracerwrappers"
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
@@ -24,7 +24,7 @@ func GetPluginTracer(pl *plugins.PluginLoader, name string) (func(*state.StateDB
 		if tracerMap, ok := tmap.(*map[string]func(core.StateDB) core.TracerResult); ok {
 			if tracer, ok := (*tracerMap)[name]; ok {
 				return func(sdb *state.StateDB) interfaces.TracerResult {
-					return wrappers.NewWrappedTracer(tracer(wrappers.NewWrappedStateDB(sdb)))
+					return statedbandtracerwrappers.NewWrappedTracer(tracer(statedbandtracerwrappers.NewWrappedStateDB(sdb)))
 				}, true
 			}
 		}
