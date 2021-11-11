@@ -71,7 +71,6 @@ type Backend interface {
 	Engine() consensus.Engine
 }
 
-
 type TracerResult interface {
 	vm.Tracer
 	GetResult() (interface{}, error)
