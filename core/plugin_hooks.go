@@ -260,7 +260,6 @@ func (mt *metaTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 
 func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *state.StateDB) *metaTracer {
 	//look for a function that takes whatever the ctx provides and statedb and returns a core.blocktracer append into meta tracer
-	log.Info("in pluginGetLiveTracer")
 	tracerList := plugins.Lookup("GetLiveTracer", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, core.StateDB) core.BlockTracer)
 		log.Info("Item is LiveTracer", "ok", ok, "type", reflect.TypeOf(item))
@@ -280,7 +279,7 @@ func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *s
 func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) *metaTracer {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting GetBlockTracer, but default PluginLoader has not been initialized")
-		return nil
+		return &metaTracer{}
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
 }
