@@ -320,6 +320,8 @@ func geth(ctx *cli.Context) error {
 	if ok, err := plugins.RunSubcommand(ctx); ok {
 		stack.Close()
 		return err
+	} else if err != nil {
+		log.Error("no subcommand", "err", err)
 	}
 	defer stack.Close()
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
