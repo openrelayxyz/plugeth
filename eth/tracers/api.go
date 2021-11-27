@@ -878,38 +878,23 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 				return nil, err
 			}
 		}
-		// Get the tracer from the plugin loader
 		if tr, ok := getPluginTracer(*config.Tracer); ok {
 			tracer = tr(statedb)
 		} else {
-			// Constuct the JavaScript tracer to execute with
-			if tracer, err = New(*config.Tracer, txctx); err != nil {
+			if t, err := New(*config.Tracer, txctx); err != nil {
 				return nil, err
+			} else {
+				deadlineCtx, cancel := context.WithTimeout(ctx, timeout)
+				go func() {
+					<-deadlineCtx.Done()
+					if errors.Is(deadlineCtx.Err(), context.DeadlineExceeded) {
+						t.Stop(errors.New("execution timeout"))
+					}
+				}()
+				defer cancel()
+				tracer = t
 			}
-			// Handle timeouts and RPC cancellations
-			deadlineCtx, cancel := context.WithTimeout(ctx, timeout)
-			go func() {
-				<-deadlineCtx.Done()
-				if errors.Is(deadlineCtx.Err(), context.DeadlineExceeded) {
-					t.Stop(errors.New("execution timeout"))
-				}
-			}()
-			defer cancel()
-			tracer = t
 		}
-		// Handle timeouts and RPC cancellations
-		deadlineCtx, cancel := context.WithTimeout(ctx, timeout)
-		go func() {
-			<-deadlineCtx.Done()
-			if deadlineCtx.Err() == context.DeadlineExceeded {
-				tracer.(*Tracer).Stop(errors.New("execution timeout"))
-			}
-		}()
-		defer cancel()
-
-	case config == nil:
-		tracer = vm.NewStructLogger(nil)
-
 	default:
 		tracer = vm.NewStructLogger(config.LogConfig)
 	}
@@ -942,7 +927,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 	case interfaces.TracerResult:
 		return tracer.GetResult()
 
-	case *Tracer:
+	case Tracer:
 		return tracer.GetResult()
 
 	default:
