@@ -85,3 +85,6 @@ workflows:
       - build_geth_push:
           requires:
             - test
+          filters:
+            tags:
+              only: /^v.*/
