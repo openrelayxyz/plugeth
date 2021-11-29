@@ -65,7 +65,7 @@ func stateTestCmd(ctx *cli.Context) error {
 		EnableReturnData: !ctx.GlobalBool(DisableReturnDataFlag.Name),
 	}
 	var (
-		tracer   vm.EVMLogger
+		tracer   vm.Tracer
 		debugger *vm.StructLogger
 	)
 	switch {

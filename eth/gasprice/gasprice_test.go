@@ -107,13 +107,10 @@ func newTestBackend(t *testing.T, londonBlock *big.Int, pending bool) *testBacke
 		signer = types.LatestSigner(gspec.Config)
 	)
 	config.LondonBlock = londonBlock
-	config.ArrowGlacierBlock = londonBlock
 	engine := ethash.NewFaker()
 	db := rawdb.NewMemoryDatabase()
-	genesis, err := gspec.Commit(db)
-	if err != nil {
-		t.Fatal(err)
-	}
+	genesis, _ := gspec.Commit(db)
+
 	// Generate testing blocks
 	blocks, _ := core.GenerateChain(gspec.Config, genesis, engine, db, testHead+1, func(i int, b *core.BlockGen) {
 		b.SetCoinbase(common.Address{1})

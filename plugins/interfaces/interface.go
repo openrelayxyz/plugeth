@@ -71,7 +71,8 @@ type Backend interface {
 	Engine() consensus.Engine
 }
 
+
 type TracerResult interface {
-	vm.EVMLogger
+	vm.Tracer
 	GetResult() (interface{}, error)
 }

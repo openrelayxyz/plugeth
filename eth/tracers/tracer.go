@@ -363,9 +363,9 @@ func (r *frameResult) pushObject(vm *duktape.Context) {
 	vm.PutPropString(obj, "getError")
 }
 
-// jsTracer provides an implementation of Tracer that evaluates a Javascript
+// Tracer provides an implementation of Tracer that evaluates a Javascript
 // function for each VM execution step.
-type jsTracer struct {
+type Tracer struct {
 	vm *duktape.Context // Javascript VM instance
 
 	tracerObject int // Stack index of the tracer JavaScript object
@@ -409,8 +409,12 @@ type Context struct {
 // New instantiates a new tracer instance. code specifies a Javascript snippet,
 // which must evaluate to an expression returning an object with 'step', 'fault'
 // and 'result' functions.
-func newJsTracer(code string, ctx *Context) (*jsTracer, error) {
-	tracer := &jsTracer{
+func New(code string, ctx *Context) (*Tracer, error) {
+	// Resolve any tracers by name and assemble the tracer object
+	if tracer, ok := tracer(code); ok {
+		code = tracer
+	}
+	tracer := &Tracer{
 		vm:              duktape.New(),
 		ctx:             make(map[string]interface{}),
 		opWrapper:       new(opWrapper),
@@ -549,10 +553,17 @@ func newJsTracer(code string, ctx *Context) (*jsTracer, error) {
 	tracer.vm.Pop()
 	hasExit := tracer.vm.GetPropString(tracer.tracerObject, "exit")
 	tracer.vm.Pop()
+
 	if hasEnter != hasExit {
 		return nil, fmt.Errorf("trace object must expose either both or none of enter() and exit()")
 	}
-	tracer.traceCallFrames = hasEnter && hasExit
+	if !hasStep {
+		// If there's no step function, the enter and exit must be present
+		if !hasEnter {
+			return nil, fmt.Errorf("trace object must expose either step() or both enter() and exit()")
+		}
+	}
+	tracer.traceCallFrames = hasEnter
 	tracer.traceSteps = hasStep
 
 	// Tracer is valid, inject the big int library to access large numbers
@@ -616,14 +627,14 @@ func newJsTracer(code string, ctx *Context) (*jsTracer, error) {
 }
 
 // Stop terminates execution of the tracer at the first opportune moment.
-func (jst *jsTracer) Stop(err error) {
+func (jst *Tracer) Stop(err error) {
 	jst.reason = err
 	atomic.StoreUint32(&jst.interrupt, 1)
 }
 
 // call executes a method on a JS object, catching any errors, formatting and
 // returning them as error objects.
-func (jst *jsTracer) call(noret bool, method string, args ...string) (json.RawMessage, error) {
+func (jst *Tracer) call(noret bool, method string, args ...string) (json.RawMessage, error) {
 	// Execute the JavaScript call and return any error
 	jst.vm.PushString(method)
 	for _, arg := range args {
@@ -659,7 +670,7 @@ func wrapError(context string, err error) error {
 }
 
 // CaptureStart implements the Tracer interface to initialize the tracing operation.
-func (jst *jsTracer) CaptureStart(env *vm.EVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {
+func (jst *Tracer) CaptureStart(env *vm.EVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {
 	jst.ctx["type"] = "CALL"
 	if create {
 		jst.ctx["type"] = "CREATE"
@@ -689,7 +700,7 @@ func (jst *jsTracer) CaptureStart(env *vm.EVM, from common.Address, to common.Ad
 }
 
 // CaptureState implements the Tracer interface to trace a single step of VM execution.
-func (jst *jsTracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
+func (jst *Tracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
 	if !jst.traceSteps {
 		return
 	}
@@ -725,7 +736,7 @@ func (jst *jsTracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cos
 }
 
 // CaptureFault implements the Tracer interface to trace an execution fault
-func (jst *jsTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
+func (jst *Tracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	if jst.err != nil {
 		return
 	}
@@ -739,7 +750,7 @@ func (jst *jsTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cos
 }
 
 // CaptureEnd is called after the call finishes to finalize the tracing.
-func (jst *jsTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
+func (jst *Tracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	jst.ctx["output"] = output
 	jst.ctx["time"] = t.String()
 	jst.ctx["gasUsed"] = gasUsed
@@ -750,7 +761,7 @@ func (jst *jsTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, 
 }
 
 // CaptureEnter is called when EVM enters a new scope (via call, create or selfdestruct).
-func (jst *jsTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
+func (jst *Tracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
 	if !jst.traceCallFrames {
 		return
 	}
@@ -780,7 +791,7 @@ func (jst *jsTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.
 
 // CaptureExit is called when EVM exits a scope, even if the scope didn't
 // execute any code.
-func (jst *jsTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
+func (jst *Tracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 	if !jst.traceCallFrames {
 		return
 	}
@@ -804,7 +815,7 @@ func (jst *jsTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 }
 
 // GetResult calls the Javascript 'result' function and returns its value, or any accumulated error
-func (jst *jsTracer) GetResult() (json.RawMessage, error) {
+func (jst *Tracer) GetResult() (json.RawMessage, error) {
 	// Transform the context into a JavaScript object and inject into the state
 	obj := jst.vm.PushObject()
 
@@ -826,7 +837,7 @@ func (jst *jsTracer) GetResult() (json.RawMessage, error) {
 }
 
 // addToObj pushes a field to a JS object.
-func (jst *jsTracer) addToObj(obj int, key string, val interface{}) {
+func (jst *Tracer) addToObj(obj int, key string, val interface{}) {
 	pushValue(jst.vm, val)
 	jst.vm.PutPropString(obj, key)
 }

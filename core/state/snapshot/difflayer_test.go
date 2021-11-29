@@ -388,7 +388,7 @@ func BenchmarkJournal(b *testing.B) {
 		}
 		return newDiffLayer(parent, common.Hash{}, destructs, accounts, storage)
 	}
-	layer := snapshot(emptyLayer())
+	layer := snapshot(new(diskLayer))
 	for i := 1; i < 128; i++ {
 		layer = fill(layer)
 	}
