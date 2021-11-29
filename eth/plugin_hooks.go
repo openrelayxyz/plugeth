@@ -22,12 +22,22 @@ func (mt *metaTracer) CaptureStart(env *vm.EVM, from common.Address, to common.A
 		tracer.CaptureStart(core.Address(from), core.Address(to), create, input, gas, value)
 	}
 }
-func (mt *metaTracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
+func (mt *metaTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureState(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), rData, depth, err)
 	}
 }
-func (mt *metaTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
+func (mt *metaTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
+	for _, tracer := range mt.tracers {
+		tracer.CaptureEnter(core.OpCode(typ), core.Address(from), core.Address(to), input, gas, value)
+	}
+}
+func (mt *metaTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
+	for _, tracer := range mt.tracers {
+		tracer.CaptureExit(output, gasUsed, err)
+	}
+}
+func (mt *metaTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), depth, err)
 	}
@@ -37,9 +47,6 @@ func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration,
 		tracer.CaptureEnd(output, gasUsed, t, err)
 	}
 }
-// TODO: Align these with PluGeth-utils
-func (mt *metaTracer) CaptureEnter(vm.OpCode, common.Address, common.Address, []byte, uint64, *big.Int) {}
-func (mt *metaTracer) CaptureExit([]byte, uint64, error) {}
 
 func PluginUpdateBlockchainVMConfig(pl *plugins.PluginLoader, cfg *vm.Config) {
 	tracerList := plugins.Lookup("LiveTracer", func(item interface{}) bool {
