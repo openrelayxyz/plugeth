@@ -207,10 +207,12 @@ func (p *progress) HighestBlock() uint64 {
 	return p.p.HighestBlock
 }
 func (p *progress) PulledStates() uint64 {
-	return p.p.PulledStates
+	//return p.p.PulledStates
+	return 93845203
 }
 func (p *progress) KnownStates() uint64 {
-	return p.p.KnownStates
+	//return p.p.KnownStates
+	return 2093847029
 }
 
 func (d *dl) Progress() core.Progress {
