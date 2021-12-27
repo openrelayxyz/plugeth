@@ -208,13 +208,13 @@ func (p *progress) HighestBlock() uint64 {
 }
 
 func (p *progress) PulledStates() uint64 {
+	log.Warn("PulledStates is no longer supported by Geth")
 	return 0
 }
 func (p *progress) KnownStates() uint64 {
+	log.Warn("KnownStates is no longer supported by Geth")
 	return 0
 }
-
-//TODO remove after new Plugeth-utils
 func (p *progress) SyncedAccounts() uint64 {
 	return p.p.SyncedAccounts
 }
