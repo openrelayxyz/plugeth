@@ -206,13 +206,50 @@ func (p *progress) CurrentBlock() uint64 {
 func (p *progress) HighestBlock() uint64 {
 	return p.p.HighestBlock
 }
+
 func (p *progress) PulledStates() uint64 {
-	//return p.p.PulledStates
-	return 93845203
+	return 0
 }
 func (p *progress) KnownStates() uint64 {
-	//return p.p.KnownStates
-	return 2093847029
+	return 0
+}
+
+//TODO remove after new Plugeth-utils
+func (p *progress) SyncedAccounts() uint64 {
+	return p.p.SyncedAccounts
+}
+func (p *progress) SyncedAccountBytes() uint64 {
+	return p.p.SyncedAccountBytes
+}
+func (p *progress) SyncedBytecodes() uint64 {
+	return p.p.SyncedBytecodes
+}
+func (p *progress) SyncedBytecodeBytes() uint64 {
+	return p.p.SyncedBytecodeBytes
+}
+func (p *progress) SyncedStorage() uint64 {
+	return p.p.SyncedStorage
+}
+func (p *progress) SyncedStorageBytes() uint64 {
+	return p.p.SyncedStorageBytes
+}
+func (p *progress) HealedTrienodes() uint64 {
+	return p.p.HealedTrienodes
+}
+func (p *progress) HealedTrienodeBytes() uint64 {
+	return p.p.HealedTrienodeBytes
+}
+func (p *progress) HealedBytecodes() uint64 {
+	return p.p.HealedBytecodes
+}
+func (p *progress) HealedBytecodeBytes() uint64 {
+	return p.p.HealedBytecodeBytes
+}
+func (p *progress) HealingTrienodes() uint64 {
+	return p.p.HealingTrienodes
+}
+func (p *progress) HealingBytecode() uint64 {
+	return p.p.HealingBytecode
 }
 
 func (d *dl) Progress() core.Progress {
