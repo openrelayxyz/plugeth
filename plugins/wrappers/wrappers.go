@@ -44,7 +44,7 @@ func (w *WrappedContract) GetOp(n uint64) core.OpCode {
 }
 
 func (w *WrappedContract) GetByte(n uint64) byte {
-	return w.c.GetByte(n)
+	return byte(w.c.GetOp(n))
 }
 
 func (w *WrappedContract) Caller() core.Address {
