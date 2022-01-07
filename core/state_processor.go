@@ -71,9 +71,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		misc.ApplyDAOHardFork(statedb)
 	}
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
-	blockTracer := pluginGetBlockTracer(header.Hash(), statedb)
-	cfg.Tracer = blockTracer
-	cfg.Debug = true
+	blockTracer, ok := pluginGetBlockTracer(header.Hash(), statedb)
+	if ok {
+		cfg.Tracer = blockTracer
+		cfg.Debug = true
+	}
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
 	// Iterate over and process the individual transactions
 	pluginPreProcessBlock(block)

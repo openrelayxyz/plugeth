@@ -39,7 +39,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
 	min := ^uint64(0)
 	for i := range freezerUpdates{
-		if min < i { min = i }
+		if min > i { min = i }
 	}
 	for i := min ; i < num; i++ {
 		update, ok := freezerUpdates[i]
