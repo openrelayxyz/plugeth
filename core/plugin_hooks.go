@@ -190,6 +190,7 @@ type metaTracer struct {
 }
 
 func (mt *metaTracer) PreProcessBlock(block *types.Block) {
+	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	blockNumber := block.NumberU64()
 	encoded, _ := rlp.EncodeToBytes(block)
@@ -198,6 +199,7 @@ func (mt *metaTracer) PreProcessBlock(block *types.Block) {
 	}
 }
 func (mt *metaTracer) PreProcessTransaction(tx *types.Transaction, block *types.Block, i int) {
+	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	transactionHash := core.Hash(tx.Hash())
 	for _, tracer := range mt.tracers {
@@ -205,6 +207,7 @@ func (mt *metaTracer) PreProcessTransaction(tx *types.Transaction, block *types.
 	}
 }
 func (mt *metaTracer) BlockProcessingError(tx *types.Transaction, block *types.Block, err error) {
+	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	transactionHash := core.Hash(tx.Hash())
 	for _, tracer := range mt.tracers {
@@ -212,6 +215,7 @@ func (mt *metaTracer) BlockProcessingError(tx *types.Transaction, block *types.B
 	}
 }
 func (mt *metaTracer) PostProcessTransaction(tx *types.Transaction, block *types.Block, i int, receipt *types.Receipt) {
+	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	transactionHash := core.Hash(tx.Hash())
 	receiptBytes, _ := json.Marshal(receipt)
@@ -220,6 +224,7 @@ func (mt *metaTracer) PostProcessTransaction(tx *types.Transaction, block *types
 	}
 }
 func (mt *metaTracer) PostProcessBlock(block *types.Block) {
+	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	for _, tracer := range mt.tracers {
 		tracer.PostProcessBlock(blockHash)
@@ -258,7 +263,7 @@ func (mt *metaTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 	}
 }
 
-func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *state.StateDB) *metaTracer {
+func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *state.StateDB) (*metaTracer, bool) {
 	//look for a function that takes whatever the ctx provides and statedb and returns a core.blocktracer append into meta tracer
 	tracerList := plugins.Lookup("GetLiveTracer", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, core.StateDB) core.BlockTracer)
@@ -274,9 +279,9 @@ func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *s
 			}
 		}
 	}
-	return mt
+	return mt, (len(mt.tracers) > 0)
 }
-func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) *metaTracer {
+func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer, bool) {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting GetBlockTracer, but default PluginLoader has not been initialized")
 		return &metaTracer{}
