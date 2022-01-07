@@ -43,7 +43,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 	}
 	for i := min ; i < num; i++ {
 		update, ok := freezerUpdates[i]
-		defer func() { delete(freezerUpdates, i) }()
+		defer func(i uint64) { delete(freezerUpdates, i) }(i)
 		if !ok {
 			log.Warn("Attempting to commit untracked block", "num", i)
 			continue
