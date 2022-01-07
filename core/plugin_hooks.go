@@ -284,7 +284,7 @@ func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *s
 func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer, bool) {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting GetBlockTracer, but default PluginLoader has not been initialized")
-		return &metaTracer{}
+		return &metaTracer{}, false
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
 }
