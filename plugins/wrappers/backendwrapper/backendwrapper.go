@@ -213,6 +213,43 @@ func (p *progress) KnownStates() uint64 {
 	return p.p.KnownStates
 }
 
+func (p *progress) SyncedAccounts() uint64 {
+	return 0
+}
+func (p *progress) SyncedAccountBytes() uint64 {
+	return 0
+}
+func (p *progress) SyncedBytecodes() uint64 {
+	return 0
+}
+func (p *progress) SyncedBytecodeBytes() uint64 {
+	return 0
+}
+func (p *progress) SyncedStorage() uint64 {
+	return 0
+}
+func (p *progress) SyncedStorageBytes() uint64 {
+	return 0
+}
+func (p *progress) HealedTrienodes() uint64 {
+	return 0
+}
+func (p *progress) HealedTrienodeBytes() uint64 {
+	return 0
+}
+func (p *progress) HealedBytecodes() uint64 {
+	return 0
+}
+func (p *progress) HealedBytecodeBytes() uint64 {
+	return 0
+}
+func (p *progress) HealingTrienodes() uint64 {
+	return 0
+}
+func (p *progress) HealingBytecode() uint64 {
+	return 0
+}
+
 func (d *dl) Progress() core.Progress {
 	return &progress{d.dl.SyncProgress()}
 }

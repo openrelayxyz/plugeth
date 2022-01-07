@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
-	"github.com/ethereum/go-ethereum/plugins/wrappers"
+	"github.com/ethereum/go-ethereum/plugins/wrappers/statedbandtracerwrappers"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
@@ -232,18 +232,20 @@ func (mt *metaTracer) CaptureStart(env *vm.EVM, from common.Address, to common.A
 }
 func (mt *metaTracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
 	for _, tracer := range mt.tracers {
-		tracer.CaptureState(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), rData, depth, err)
+		tracer.CaptureState(pc, core.OpCode(op), gas, cost, statedbandtracerwrappers.NewWrappedScopeContext(scope), rData, depth, err)
 	}
 }
 func (mt *metaTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	for _, tracer := range mt.tracers {
-		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), depth, err)
+		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, statedbandtracerwrappers.NewWrappedScopeContext(scope), depth, err)
 	}
 }
-func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
+func (mt *metaTracer) CaptureEnd(env *vm.EVM, output []byte, gasUsed uint64, t time.Duration, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureEnd(output, gasUsed, t, err)
 	}
+}
+func (mt *metaTracer) CapturePreEVM(env *vm.EVM, inputs map[string]interface{}) {
 }
 
 func (mt *metaTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {
@@ -269,7 +271,7 @@ func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *s
 	mt := &metaTracer{tracers: []core.BlockTracer{}}
 	for _, tracer := range tracerList {
 		if v, ok := tracer.(func(core.Hash, core.StateDB) core.BlockTracer); ok {
-			bt := v(core.Hash(hash), wrappers.NewWrappedStateDB(statedb))
+			bt := v(core.Hash(hash), statedbandtracerwrappers.NewWrappedStateDB(statedb))
 			if bt != nil {
 				mt.tracers = append(mt.tracers, bt)
 			}
