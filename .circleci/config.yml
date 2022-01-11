@@ -74,10 +74,10 @@ jobs:
           aws-region: AWS_REGION
       - run:
           name: push to s3
-          command: aws s3 cp ./artifacts/geth-linux-amd64-$PLUGETH_UTILS_VERSION-${CIRCLE_TAG} s3://ethercattle-binaries/plugeth/$CIRCLE_TAG/geth-linux-amd64 --acl=public-read
-      - run:
-          name: push to s3
-          command: aws s3 cp ./artifacts/geth-linux-arm64-$PLUGETH_UTILS_VERSION-${CIRCLE_TAG} s3://ethercattle-binaries/plugeth/$CIRCLE_TAG/geth-linux-arm64 --acl=public-read
+          command: |
+            export PLUGETH_UTILS_VERSION=$(grep "github.com/openrelayxyz/plugeth-utils v" go.mod | cut -d ' ' -f 2)
+            aws s3 cp ./artifacts/geth-linux-amd64-$PLUGETH_UTILS_VERSION-${CIRCLE_TAG} s3://ethercattle-binaries/plugeth/$CIRCLE_TAG/geth-linux-amd64 --acl=public-read
+            aws s3 cp ./artifacts/geth-linux-arm64-$PLUGETH_UTILS_VERSION-${CIRCLE_TAG} s3://ethercattle-binaries/plugeth/$CIRCLE_TAG/geth-linux-arm64 --acl=public-read
       - run:
           name: Message Slack
           command: |
