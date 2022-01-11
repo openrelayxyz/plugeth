@@ -69,7 +69,7 @@ jobs:
             VERSION=${CIRCLE_TAG}
             ghr  -draft -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -name $NAME -delete ${VERSION} ./artifacts/
       - aws-cli/setup: #See: https://circleci.com/orbs/registry/orb/circleci/aws-cli
-          aws-access-key-id: ACCESS_KEY_ID
+          aws-access-key-id: ACCESS_KEY
           aws-secret-access-key: SECRET_ACCESS_KEY
           aws-region: AWS_REGION
       - run:
