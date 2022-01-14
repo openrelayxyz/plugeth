@@ -59,6 +59,14 @@ func (w *WrappedContract) Value() *big.Int {
 	return w.c.Value()
 }
 
+func (w *WrappedContract) Input() []byte {
+	return w.c.Input
+}
+
+func (w *WrappedContract) Code() []byte {
+	return w.c.Code
+}
+
 // added UseGas bc compiler compained without it. Should investigate if the false return with effect performance.
 // take this out of core.interface
 func (w *WrappedContract) UseGas(gas uint64) (ok bool) {
