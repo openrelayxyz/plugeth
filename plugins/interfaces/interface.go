@@ -73,6 +73,6 @@ type Backend interface {
 }
 
 type TracerResult interface {
-	vm.Tracer
+	vm.EVMLogger
 	GetResult() (interface{}, error)
 }
