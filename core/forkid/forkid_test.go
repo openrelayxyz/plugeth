@@ -73,8 +73,10 @@ func TestCreation(t *testing.T) {
 				{12243999, ID{Hash: checksumToBytes(0xe029e991), Next: 12244000}}, // Last Muir Glacier block
 				{12244000, ID{Hash: checksumToBytes(0x0eb440f6), Next: 12965000}}, // First Berlin block
 				{12964999, ID{Hash: checksumToBytes(0x0eb440f6), Next: 12965000}}, // Last Berlin block
-				{12965000, ID{Hash: checksumToBytes(0xb715077d), Next: 0}},        // First London block
-				{20000000, ID{Hash: checksumToBytes(0xb715077d), Next: 0}},        // Future London block
+				{12965000, ID{Hash: checksumToBytes(0xb715077d), Next: 13773000}}, // First London block
+				{13772999, ID{Hash: checksumToBytes(0xb715077d), Next: 13773000}}, // Last London block
+				{13773000, ID{Hash: checksumToBytes(0x20c327fc), Next: 0}},        // / First Arrow Glacier block
+				{20000000, ID{Hash: checksumToBytes(0x20c327fc), Next: 0}},        // Future Arrow Glacier block
 			},
 		},
 		// Ropsten test cases
@@ -183,8 +185,11 @@ func TestCreation(t *testing.T) {
 				{11_700_000, ID{Hash: checksumToBytes(0xdb63a1ca), Next: 13_189_133}},
 				{11_700_001, ID{Hash: checksumToBytes(0xdb63a1ca), Next: 13_189_133}},
 				{13_189_132, ID{Hash: checksumToBytes(0xdb63a1ca), Next: 13_189_133}},
-				{13_189_133, ID{Hash: checksumToBytes(0x0f6bf187), Next: 0}},
-				{13_189_134, ID{Hash: checksumToBytes(0x0f6bf187), Next: 0}},
+				{13_189_133, ID{Hash: checksumToBytes(0x0f6bf187), Next: 14_525_000}},
+				{13_189_134, ID{Hash: checksumToBytes(0x0f6bf187), Next: 14_525_000}},
+				{14_524_999, ID{Hash: checksumToBytes(0x0f6bf187), Next: 14_525_000}},
+				{14_525_000, ID{Hash: checksumToBytes(0x7fd1bb25), Next: 0}},
+				{14_525_001, ID{Hash: checksumToBytes(0x7fd1bb25), Next: 0}},
 			},
 		},
 		{
@@ -203,8 +208,11 @@ func TestCreation(t *testing.T) {
 				{2200013, ID{Hash: checksumToBytes(0x6f402821), Next: 4_368_634}},
 				{2200014, ID{Hash: checksumToBytes(0x6f402821), Next: 4_368_634}},
 				{4_368_633, ID{Hash: checksumToBytes(0x6f402821), Next: 4_368_634}},
-				{4_368_634, ID{Hash: checksumToBytes(0xf03e54e7), Next: 0}},
-				{4_368_635, ID{Hash: checksumToBytes(0xf03e54e7), Next: 0}},
+				{4_368_634, ID{Hash: checksumToBytes(0xf03e54e7), Next: 5_578_000}},
+				{4_368_635, ID{Hash: checksumToBytes(0xf03e54e7), Next: 5_578_000}},
+				{5_577_999, ID{Hash: checksumToBytes(0xf03e54e7), Next: 5_578_000}},
+				{5_578_000, ID{Hash: checksumToBytes(0xc5459816), Next: 0}},
+				{5_578_001, ID{Hash: checksumToBytes(0xc5459816), Next: 0}},
 			},
 		},
 		{
@@ -227,8 +235,11 @@ func TestCreation(t *testing.T) {
 				{2_519_999, ID{Hash: checksumToBytes(0xf42f5539), Next: 2_520_000}},
 				{2_520_000, ID{Hash: checksumToBytes(0x66b5c286), Next: 3_985_893}},
 				{3_985_892, ID{Hash: checksumToBytes(0x66b5c286), Next: 3_985_893}},
-				{3_985_893, ID{Hash: checksumToBytes(0x92b323e0), Next: 0}},
-				{3_985_894, ID{Hash: checksumToBytes(0x92b323e0), Next: 0}},
+				{3_985_893, ID{Hash: checksumToBytes(0x92b323e0), Next: 5_520_000}},
+				{3_985_894, ID{Hash: checksumToBytes(0x92b323e0), Next: 5_520_000}},
+				{5_519_999, ID{Hash: checksumToBytes(0x92b323e0), Next: 5_520_000}},
+				{5_520_000, ID{Hash: checksumToBytes(0x8c9b1797), Next: 0}},
+				{5_520_001, ID{Hash: checksumToBytes(0x8c9b1797), Next: 0}},
 			},
 		},
 		// MintMe test cases
@@ -315,11 +326,11 @@ func TestValidation(t *testing.T) {
 		// Local is mainnet Petersburg, remote is Rinkeby Petersburg.
 		{7987396, ID{Hash: checksumToBytes(0xafec6b27), Next: 0}, ErrLocalIncompatibleOrStale},
 
-		// Local is mainnet London, far in the future. Remote announces Gopherium (non existing fork)
+		// Local is mainnet Arrow Glacier, far in the future. Remote announces Gopherium (non existing fork)
 		// at some future block 88888888, for itself, but past block for local. Local is incompatible.
 		//
 		// This case detects non-upgraded nodes with majority hash power (typical Ropsten mess).
-		{88888888, ID{Hash: checksumToBytes(0xb715077d), Next: 88888888}, ErrLocalIncompatibleOrStale},
+		{88888888, ID{Hash: checksumToBytes(0x20c327fc), Next: 88888888}, ErrLocalIncompatibleOrStale},
 
 		// Local is mainnet Byzantium. Remote is also in Byzantium, but announces Gopherium (non existing
 		// fork) at block 7279999, before Petersburg. Local is incompatible.
@@ -365,22 +376,22 @@ func TestGatherForks(t *testing.T) {
 		{
 			"classic",
 			params.ClassicChainConfig,
-			[]uint64{1150000, 2500000, 3000000, 5000000, 5900000, 8772000, 9573000, 10500839, 11_700_000, 13_189_133},
+			[]uint64{1150000, 2500000, 3000000, 5000000, 5900000, 8772000, 9573000, 10500839, 11_700_000, 13_189_133, 14_525_000},
 		},
 		{
 			"mainnet",
 			params.MainnetChainConfig,
-			[]uint64{1150000, 1920000, 2463000, 2675000, 4370000, 7280000, 9069000, 9200000, 12_244_000, 12_965_000},
+			[]uint64{1150000, 1920000, 2463000, 2675000, 4370000, 7280000, 9069000, 9200000, 12_244_000, 12_965_000, 13_773_000},
 		},
 		{
 			"mordor",
 			params.MordorChainConfig,
-			[]uint64{301_243, 999_983, 2_520_000, 3_985_893},
+			[]uint64{301_243, 999_983, 2_520_000, 3_985_893, 5_520_000},
 		},
 		{
 			"kotti",
 			params.KottiChainConfig,
-			[]uint64{716_617, 1_705_549, 2_200_013, 4_368_634},
+			[]uint64{716_617, 1_705_549, 2_200_013, 4_368_634, 5_578_000},
 		},
 		{
 			"mintme",
