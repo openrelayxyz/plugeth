@@ -206,7 +206,34 @@ func (n *Node) WSEndpoint() string {
 func (n *Node) ResolvePath(x string) string {
 	return n.n.ResolvePath(x)
 }
-
 func (n *Node) Attach() (core.Client, error) {
 	return n.n.Attach()
 }
+
+// type WrappedBlockContext struct {
+// 	b vm.BlockContext
+// }
+//
+// //type WrappedBlockContext vm.BlockContext
+//
+// func NewWrappedBlockContext(c vm.BlockContext) *WrappedBlockContext {
+// 	return &WrappedBlockContext{c}
+// }
+// func (w *WrappedBlockContext) Coinbase() core.Address {
+// 	return core.Address(w.b.Coinbase)
+// }
+// func (w *WrappedBlockContext) GasLimit() uint64 {
+// 	return w.b.GasLimit
+// }
+// func (w *WrappedBlockContext) BlockNumber() *big.Int {
+// 	return w.b.BlockNumber
+// }
+// func (w *WrappedBlockContext) Time() *big.Int {
+// 	return w.b.Time
+// }
+// func (w *WrappedBlockContext) Difficulty() *big.Int {
+// 	return w.b.Difficulty
+// }
+// func (w *WrappedBlockContext) BaseFee() *big.Int {
+// 	return w.b.BaseFee
+// }

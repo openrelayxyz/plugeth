@@ -882,7 +882,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 		}
 		// Get the tracer from the plugin loader
 		if tr, ok := getPluginTracer(*config.Tracer); ok {
-			tracer = tr(statedb)
+			tracer = tr(statedb, vmctx)
 		} else {
 			// Constuct the JavaScript tracer to execute with
 			if t, err := New(*config.Tracer, txctx); err != nil {
