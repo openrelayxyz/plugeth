@@ -1,6 +1,6 @@
 ---
 name: Report a bug
-about: Something with go-ethereum is not working as expected
+about: Something with PluGeth is not working as expected
 title: ''
 labels: 'type:bug'
 assignees: ''
@@ -8,8 +8,8 @@ assignees: ''
 
 #### System information
 
-Geth version: `geth version`
-OS & Version: Windows/Linux/OSX
+PluGeth version: `plugeth version`
+OS & Version: Linux/OSX
 Commit hash : (if `develop`)
 
 #### Expected behaviour
