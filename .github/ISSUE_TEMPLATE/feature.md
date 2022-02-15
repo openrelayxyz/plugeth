@@ -1,6 +1,6 @@
 ---
 name: Request a feature
-about: Report a missing feature - e.g. as a step before submitting a PR
+about: Are you looking for data this is not currently exposed through plugin hooks? Let us know. 
 title: ''
 labels: 'type:feature'
 assignees: ''
@@ -15,3 +15,4 @@ What are the use-cases?
 
 Do you have ideas regarding the implementation of this feature?
 Are you willing to implement this feature?
+
