@@ -74,3 +74,5 @@ require (
 	gotest.tools v2.2.0+incompatible // indirect
 
 )
+
+replace github.com/openrelayxyz/plugeth-utils v0.0.14 => ../plugeth-utils
