@@ -185,6 +185,11 @@ func pluginReorg(commonBlock *types.Block, oldChain, newChain types.Blocks) {
 	PluginReorg(plugins.DefaultPluginLoader, commonBlock, oldChain, newChain)
 }
 
+type PreTracer interface {
+	CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int) 
+
+}
+
 type metaTracer struct {
 	tracers []core.BlockTracer
 }
