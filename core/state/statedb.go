@@ -906,12 +906,14 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 
 	// Commit objects to the trie, measuring the elapsed time
 	var storageCommitted int
+	codeUpdates := make(map[common.Hash][]byte)
 	codeWriter := s.db.TrieDB().DiskDB().NewBatch()
 	for addr := range s.stateObjectsDirty {
 		if obj := s.stateObjects[addr]; !obj.deleted {
 			// Write any contract code associated with the state object
 			if obj.code != nil && obj.dirtyCode {
 				rawdb.WriteCode(codeWriter, common.BytesToHash(obj.CodeHash()), obj.code)
+				codeUpdates[common.BytesToHash(obj.CodeHash())] = obj.code
 				obj.dirtyCode = false
 			}
 			// Write any storage changes in the state object to its storage trie
@@ -969,6 +971,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		}
 		// Only update if there's a state transition (skip empty Clique blocks)
 		if parent := s.snap.Root(); parent != root {
+			pluginStateUpdate(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage, codeUpdates)
 			if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
 				log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
 			}

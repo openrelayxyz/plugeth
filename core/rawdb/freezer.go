@@ -284,6 +284,7 @@ func (f *freezer) ModifyAncients(fn func(ethdb.AncientWriteOp) error) (writeSize
 	if err != nil {
 		return 0, err
 	}
+	pluginCommitUpdate(item)
 	atomic.StoreUint64(&f.frozen, item)
 	return writeSize, nil
 }
