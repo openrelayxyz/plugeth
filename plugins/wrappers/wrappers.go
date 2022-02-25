@@ -81,6 +81,10 @@ type WrappedTracer struct {
 func NewWrappedTracer(r core.TracerResult) *WrappedTracer {
 	return &WrappedTracer{r}
 }
+func (w WrappedTracer) CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int) {
+	if v, ok := w.r.(core.PreTracer); ok {
+	v.CapturePreStart(core.Address(from), (*core.Address)(to), input, gas, value)}
+}
 func (w WrappedTracer) CaptureStart(env *vm.EVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {
 	w.r.CaptureStart(core.Address(from), core.Address(to), create, input, gas, value)
 }
