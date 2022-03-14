@@ -18,8 +18,13 @@ import (
 
 type Subcommand func(*cli.Context, []string) error
 
+type pluginDetails struct {
+	p *plugin.Plugin
+	name string
+}
+
 type PluginLoader struct {
-	Plugins     []*plugin.Plugin
+	Plugins     []pluginDetails
 	Subcommands map[string]Subcommand
 	Flags       []*flag.FlagSet
 	LookupCache map[string][]interface{}
@@ -31,9 +36,11 @@ func (pl *PluginLoader) Lookup(name string, validate func(interface{}) bool) []i
 	}
 	results := []interface{}{}
 	for _, plugin := range pl.Plugins {
-		if v, err := plugin.Lookup(name); err == nil {
+		if v, err := plugin.p.Lookup(name); err == nil {
 			if validate(v) {
 				results = append(results, v)
+			} else {
+				log.Warn("Plugin matches hook but not signature", "plugin", plugin.name, "hook", name)
 			}
 		}
 	}
@@ -53,7 +60,7 @@ var DefaultPluginLoader *PluginLoader
 
 func NewPluginLoader(target string) (*PluginLoader, error) {
 	pl := &PluginLoader{
-		Plugins:     []*plugin.Plugin{},
+		Plugins:     []pluginDetails{},
 		Subcommands: make(map[string]Subcommand),
 		Flags:       []*flag.FlagSet{},
 		LookupCache: make(map[string][]interface{}),
@@ -98,7 +105,7 @@ func NewPluginLoader(target string) (*PluginLoader, error) {
 				}
 			}
 		}
-		pl.Plugins = append(pl.Plugins, plug)
+		pl.Plugins = append(pl.Plugins, pluginDetails{plug, fpath})
 	}
 	return pl, nil
 }
