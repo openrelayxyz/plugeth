@@ -1,11 +1,33 @@
 package state
 
 import (
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
+	"github.com/ethereum/go-ethereum/core/state/snapshot"
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
+
+type pluginSnapshot struct {
+	root common.Hash
+}
+
+func (s *pluginSnapshot) Root() common.Hash {
+	return s.root
+}
+
+func (s *pluginSnapshot) Account(hash common.Hash) (*snapshot.Account, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *pluginSnapshot) AccountRLP(hash common.Hash) ([]byte, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (s *pluginSnapshot) Storage(accountHash, storageHash common.Hash) ([]byte, error) {
+	return nil, fmt.Errorf("not implemented")
+}
 
 func PluginStateUpdate(pl *plugins.PluginLoader, blockRoot, parentRoot common.Hash, destructs map[common.Hash]struct{}, accounts map[common.Hash][]byte, storage map[common.Hash]map[common.Hash][]byte, codeUpdates map[common.Hash][]byte) {
 	fnList := pl.Lookup("StateUpdate", func(item interface{}) bool {
