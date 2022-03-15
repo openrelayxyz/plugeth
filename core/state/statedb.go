@@ -151,6 +151,7 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 			sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 		}
 	}
+	// Start PluGeth section
 	if sdb.snap == nil {
 		log.Debug("Snapshots not availble. Using plugin snapshot.")
 		sdb.snap = &pluginSnapshot{root}
@@ -158,6 +159,7 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 		sdb.snapAccounts = make(map[common.Hash][]byte)
 		sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 	}
+	// End PluGeth section
 	return sdb, nil
 }
 
@@ -979,7 +981,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		// Only update if there's a state transition (skip empty Clique blocks)
 		if parent := s.snap.Root(); parent != root {
 			pluginStateUpdate(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage, codeUpdates)
-			if _, ok := s.snap.(*pluginSnapshot); !ok && s.snaps != nil {
+			if _, ok := s.snap.(*pluginSnapshot); !ok && s.snaps != nil { // This if statement (but not its content) was added by Plugeth
 				if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
 					log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
 				}
