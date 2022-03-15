@@ -207,48 +207,70 @@ func (p *progress) HighestBlock() uint64 {
 	return p.p.HighestBlock
 }
 func (p *progress) PulledStates() uint64 {
-	//return p.p.PulledStates
-	return 93845203
+	return p.p.PulledStates
 }
 func (p *progress) KnownStates() uint64 {
-	//return p.p.KnownStates
-	return 2093847029
+	return p.p.KnownStates
 }
 
 func (p *progress) SyncedAccounts() uint64 {
+	//todo: add in when changes get merged to core-geth
+	//return p.p.SyncedAccounts
 	return 0
 }
 func (p *progress) SyncedAccountBytes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedAccountBytes
 	return 0
 }
 func (p *progress) SyncedBytecodes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedBytecodes
 	return 0
 }
 func (p *progress) SyncedBytecodeBytes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedBytecodeBytes
 	return 0
 }
 func (p *progress) SyncedStorage() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedStorage
 	return 0
 }
 func (p *progress) SyncedStorageBytes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedStorageBytes
 	return 0
 }
 func (p *progress) HealedTrienodes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedTrienodes
 	return 0
 }
 func (p *progress) HealedTrienodeBytes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedTrienodeBytes
 	return 0
 }
 func (p *progress) HealedBytecodes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedBytecodes
 	return 0
 }
 func (p *progress) HealedBytecodeBytes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedBytecodeBytes
 	return 0
 }
 func (p *progress) HealingTrienodes() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealingTrienodes
 	return 0
 }
 func (p *progress) HealingBytecode() uint64 {
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealingBytecode
 	return 0
 }
 
