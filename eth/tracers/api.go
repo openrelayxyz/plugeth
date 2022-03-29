@@ -890,8 +890,10 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 			}
 		}
 		// Get the tracer from the plugin loader
+		//Begin PluGeth code injection 1/1
 		if tr, ok := getPluginTracer(*config.Tracer); ok {
 			tracer = tr(statedb, vmctx)
+		//end PluGeth injection
 		} else {
 			// Constuct the JavaScript tracer to execute with
 			if t, err := New(*config.Tracer, txctx); err != nil {

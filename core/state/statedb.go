@@ -971,7 +971,9 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		}
 		// Only update if there's a state transition (skip empty Clique blocks)
 		if parent := s.snap.Root(); parent != root {
+			//begin PluGeth code injection 1/1
 			pluginStateUpdate(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage, codeUpdates)
+			//end PluGeth injection
 			if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
 				log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
 			}

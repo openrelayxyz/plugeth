@@ -71,6 +71,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		misc.ApplyDAOHardFork(statedb)
 	}
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
+	//begin PluGeth code injection 1/1
 	blockTracer, ok := pluginGetBlockTracer(header.Hash(), statedb)
 	if ok {
 		cfg.Tracer = blockTracer
@@ -104,6 +105,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
 	pluginPostProcessBlock(block)
+	//end PluGeth injection
 	blockTracer.PostProcessBlock(block)
 	return receipts, allLogs, *usedGas, nil
 }

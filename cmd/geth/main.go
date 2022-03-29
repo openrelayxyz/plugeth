@@ -336,6 +336,7 @@ func prepare(ctx *cli.Context) {
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
+	//begin PluGeth code injection
 	if err := plugins.Initialize(path.Join(ctx.GlobalString(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
 		return err
 	}
@@ -355,6 +356,7 @@ func geth(ctx *cli.Context) error {
 	}
 	defer stack.Close()
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
+	//end PluGeth injection
 
 	startNode(ctx, stack, backend, false)
 	stack.Wait()
