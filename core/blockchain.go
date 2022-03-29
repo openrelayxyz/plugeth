@@ -1367,6 +1367,7 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 	bc.futureBlocks.Remove(block.Hash())
 
 	if status == CanonStatTy {
+		// begin PluGeth code injection 1/2
 		pluginNewHead(block, block.Hash(), logs, externTd)
 		bc.chainFeed.Send(ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
 		if len(logs) > 0 {
@@ -1382,6 +1383,7 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 		}
 	} else {
 		pluginNewSideBlock(block, block.Hash(), logs)
+		//end PluGeth injection
 		bc.chainSideFeed.Send(ChainSideEvent{Block: block})
 	}
 	return status, nil
@@ -2137,7 +2139,9 @@ func (bc *BlockChain) reorg(data *reorgData) error {
 		msg = "Large chain reorg detected"
 		logFn = log.Warn
 	}
+	//begin PluGeth code injection 2/2
 	pluginReorg(data.commonBlock, data.oldChain, data.newChain)
+	//end PluGeth injection
 	logFn(msg, "number", data.commonBlock.Number(), "hash", data.commonBlock.Hash(),
 		"drop", len(data.oldChain), "dropfrom", data.oldChain[0].Hash(), "add", len(data.newChain), "addfrom", data.newChain[0].Hash())
 	blockReorgAddMeter.Mark(int64(len(data.newChain)))

@@ -75,6 +75,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		}
 	}
 	blockContext := NewEVMBlockContext(header, p.bc, nil)
+	//begin PluGeth code injection 1/1
 	blockTracer := pluginGetBlockTracer(header.Hash(), statedb)
 	cfg.Tracer = blockTracer
 	cfg.Debug = true
@@ -106,6 +107,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
 	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
 	pluginPostProcessBlock(block)
+	//end PluGeth injection
 	blockTracer.PostProcessBlock(block)
 	return receipts, allLogs, *usedGas, nil
 }
