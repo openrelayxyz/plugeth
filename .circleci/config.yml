@@ -81,7 +81,7 @@ jobs:
       - run:
           name: Message Slack
           command: |
-              ./slack-post.sh -w $SLACK_WEBHOOK -m "*plugeth*:\nTag: $CIRCLE_TAG \n"
+              ./.circleci/slack-post.sh -w $SLACK_WEBHOOK -m "*plugeth*:\nTag: $CIRCLE_TAG \n"
 
 workflows:
   version: 2
