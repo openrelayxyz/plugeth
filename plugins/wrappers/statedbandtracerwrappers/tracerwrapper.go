@@ -61,6 +61,14 @@ func (w *WrappedContract) Value() *big.Int {
 	return w.c.Value()
 }
 
+func (w *WrappedContract) Input() []byte {
+	return w.c.Input
+}
+
+func (w *WrappedContract) Code() []byte {
+	return w.c.Code
+}
+
 // added UseGas bc compiler compained without it. Should investigate if the false return with effect performance.
 // take this out of core.interface
 func (w *WrappedContract) UseGas(gas uint64) (ok bool) {
@@ -72,6 +80,10 @@ func NewWrappedTracer(r core.TracerResult) *WrappedTracer {
 	return &WrappedTracer{r}
 }
 func (w WrappedTracer) CapturePreEVM(env *vm.EVM, inputs map[string]interface{}) {
+}
+func (w WrappedTracer) CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int) {
+	if v, ok := w.r.(core.PreTracer); ok {
+	v.CapturePreStart(core.Address(from), (*core.Address)(to), input, gas, value)}
 }
 func (w WrappedTracer) CaptureStart(env *vm.EVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {
 	w.r.CaptureStart(core.Address(from), core.Address(to), create, input, gas, value)
