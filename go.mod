@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.1.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.1.1
-	github.com/btcsuite/btcd v0.20.1-beta
+	github.com/btcsuite/btcd/btcec/v2 v2.1.2
 	github.com/cespare/cp v0.1.0
 	github.com/cloudflare/cloudflare-go v0.27.0
 	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
@@ -51,7 +51,7 @@ require (
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/open-rpc/meta-schema v0.0.0-20201029221707-1b72ef2ea333
-	github.com/openrelayxyz/plugeth-utils v0.0.15
+	github.com/openrelayxyz/plugeth-utils v0.0.16
 	github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7
 	github.com/prometheus/tsdb v0.7.1
 	github.com/rjeczalik/notify v0.9.1
