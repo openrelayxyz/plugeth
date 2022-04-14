@@ -2125,6 +2125,14 @@ func (bc *BlockChain) SetChainHead(head *types.Block) error {
 	if len(logs) > 0 {
 		bc.logsFeed.Send(logs)
 	}
+	// begin plugeth code injection
+	ptd := bc.GetTd(head.ParentHash(), head.NumberU64()-1)
+	externTd := ptd
+	if ptd != nil {
+		externTd = new(big.Int).Add(head.Difficulty(), ptd)
+	}
+	pluginNewHead(head, head.Hash(), logs, externTd)
+	// end plugeth code injection
 	bc.chainHeadFeed.Send(ChainHeadEvent{Block: head})
 
 	context := []interface{}{
