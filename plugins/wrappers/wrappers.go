@@ -217,6 +217,9 @@ func (n *Node) ResolvePath(x string) string {
 func (n *Node) Attach() (core.Client, error) {
 	return n.n.Attach()
 }
+func (n *Node) Close() error {
+	return n.n.Close()
+}
 
 // type WrappedBlockContext struct {
 // 	b vm.BlockContext
