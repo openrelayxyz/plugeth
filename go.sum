@@ -318,8 +318,8 @@ github.com/onsi/ginkgo v1.14.0/go.mod h1:iSB4RoI2tjJc9BBv4NKIKWKya62Rps+oPG/Lv9k
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/onsi/gomega v1.10.1 h1:o0+MgICZLuZ7xjH7Vx6zS/zcu93/BEp1VwkIW1mEXCE=
 github.com/onsi/gomega v1.10.1/go.mod h1:iN09h71vgCQne3DLsj+A5owkum+a2tYe+TOCB1ybHNo=
-github.com/openrelayxyz/plugeth-utils v0.0.16 h1:G/WOaW1tsRoPZT6t29+Cphf2vVB2UVqlBtd0DocG0hA=
-github.com/openrelayxyz/plugeth-utils v0.0.16/go.mod h1:YCPmIHj5B5v9qdgKFYhBYpZumXW5pjM8+3duJr/gElo=
+github.com/openrelayxyz/plugeth-utils v0.0.17 h1:HlDCPjB8Jmt5gYLXA1HyGcNekhnQQr/prCA2/THNpz4=
+github.com/openrelayxyz/plugeth-utils v0.0.17/go.mod h1:YCPmIHj5B5v9qdgKFYhBYpZumXW5pjM8+3duJr/gElo=
 github.com/opentracing/opentracing-go v1.0.2/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.0.3-0.20180606204148-bd9c31933947/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/opentracing/opentracing-go v1.1.0 h1:pWlfV3Bxv7k65HYwkikxat0+s3pV4bsqf19k25Ur8rU=
