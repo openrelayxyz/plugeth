@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"math/big"
+	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus"
@@ -75,5 +76,6 @@ type Backend interface {
 
 type TracerResult interface {
 	vm.EVMLogger
-	GetResult() (interface{}, error)
+	GetResult() (json.RawMessage, error)
+	Stop(error)
 }
