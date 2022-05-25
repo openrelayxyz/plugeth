@@ -872,15 +872,18 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 	}
 	// Default tracer is the struct logger
 	tracer = logger.NewStructLogger(config.Config)
-	// Get the tracer from the plugin loader
-	//begin PluGeth code injection
-	if tr, ok := getPluginTracer(*config.Tracer); ok {
-	//end PluGeth code injection
-		tracer = tr(statedb, vmctx)
-	} else if config.Tracer != nil {
-		tracer, err = New(*config.Tracer, txctx)
-		if err != nil {
-			return nil, err
+
+	if config.Tracer != nil {
+		// Get the tracer from the plugin loader
+		//begin PluGeth code injection
+		if tr, ok := getPluginTracer(*config.Tracer); ok {
+			//end PluGeth code injection
+			tracer = tr(statedb, vmctx)
+		} else {
+			tracer, err = New(*config.Tracer, txctx)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	// Define a meaningful timeout of a single transaction trace
