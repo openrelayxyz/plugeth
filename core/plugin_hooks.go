@@ -186,7 +186,7 @@ func pluginReorg(commonBlock *types.Block, oldChain, newChain types.Blocks) {
 }
 
 type PreTracer interface {
-	CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int) 
+	CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int)
 
 }
 
@@ -267,6 +267,10 @@ func (mt *metaTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 		tracer.CaptureExit(output, gasUsed, err)
 	}
 }
+
+func (mt metaTracer) CaptureTxStart (gasLimit uint64) {}
+
+func (mt metaTracer) CaptureTxEnd (restGas uint64) {}
 
 func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *state.StateDB) (*metaTracer, bool) {
 	//look for a function that takes whatever the ctx provides and statedb and returns a core.blocktracer append into meta tracer
