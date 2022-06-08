@@ -517,6 +517,15 @@ func (c *ChainConfig) SetEIP2718Transition(n *uint64) error {
 	return nil
 }
 
+func (c *ChainConfig) GetEIP4399Transition() *uint64 {
+	return bigNewU64(c.MergeForkBlock)
+}
+
+func (c *ChainConfig) SetEIP4399Transition(n *uint64) error {
+	c.MergeForkBlock = setBig(c.MergeForkBlock, n)
+	return nil
+}
+
 func (c *ChainConfig) IsEnabled(fn func() *uint64, n *big.Int) bool {
 	f := fn()
 	if f == nil || n == nil {
@@ -584,8 +593,21 @@ func (c *ChainConfig) GetEthashTerminalTotalDifficulty() *big.Int {
 }
 
 func (c *ChainConfig) SetEthashTerminalTotalDifficulty(n *big.Int) error {
-	c.TerminalTotalDifficulty = n
+	if n == nil {
+		c.TerminalTotalDifficulty = nil
+		return nil
+	}
+	c.TerminalTotalDifficulty = new(big.Int).Set(n)
 	return nil
+}
+
+// IsTerminalPoWBlock returns whether the given block is the last block of PoW stage.
+func (c *ChainConfig) IsTerminalPoWBlock(parentTotalDiff *big.Int, totalDiff *big.Int) bool {
+	terminalTotalDifficulty := c.GetEthashTerminalTotalDifficulty()
+	if terminalTotalDifficulty == nil {
+		return false
+	}
+	return parentTotalDiff.Cmp(terminalTotalDifficulty) < 0 && totalDiff.Cmp(terminalTotalDifficulty) >= 0
 }
 
 func (c *ChainConfig) GetEthashMinimumDifficulty() *big.Int {

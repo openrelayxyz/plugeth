@@ -626,6 +626,14 @@ func (g *Genesis) SetEIP2718Transition(n *uint64) error {
 	return g.Config.SetEIP2718Transition(n)
 }
 
+func (g *Genesis) GetEIP4399Transition() *uint64 {
+	return g.Config.GetEIP4399Transition()
+}
+
+func (g *Genesis) SetEIP4399Transition(n *uint64) error {
+	return g.Config.SetEIP4399Transition(n)
+}
+
 func (g *Genesis) GetECBP1100Transition() *uint64 {
 	return g.Config.GetECBP1100Transition()
 }
@@ -664,6 +672,15 @@ func (g *Genesis) GetEthashTerminalTotalDifficulty() *big.Int {
 
 func (g *Genesis) SetEthashTerminalTotalDifficulty(n *big.Int) error {
 	return g.Config.SetEthashTerminalTotalDifficulty(n)
+}
+
+// IsTerminalPoWBlock returns whether the given block is the last block of PoW stage.
+func (g *Genesis) IsTerminalPoWBlock(parentTotalDiff *big.Int, totalDiff *big.Int) bool {
+	terminalTotalDifficulty := g.Config.GetEthashTerminalTotalDifficulty()
+	if terminalTotalDifficulty == nil {
+		return false
+	}
+	return parentTotalDiff.Cmp(terminalTotalDifficulty) < 0 && totalDiff.Cmp(terminalTotalDifficulty) >= 0
 }
 
 func (g *Genesis) GetEthashMinimumDifficulty() *big.Int {

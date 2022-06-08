@@ -165,6 +165,11 @@ type ProtocolSpecifier interface {
 
 	GetEIP3198Transition() *uint64
 	SetEIP3198Transition(n *uint64) error
+
+	// EIP4399 is the RANDOM opcode.
+	// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-4399.md
+	GetEIP4399Transition() *uint64
+	SetEIP4399Transition(n *uint64) error
 }
 
 type Forker interface {
@@ -230,6 +235,8 @@ type EthashConfigurator interface {
 
 	GetEthashTerminalTotalDifficulty() *big.Int
 	SetEthashTerminalTotalDifficulty(n *big.Int) error
+
+	IsTerminalPoWBlock(parentTotalDiff *big.Int, totalDiff *big.Int) bool
 
 	GetEthashDifficultyBombDelaySchedule() Uint64BigMapEncodesHex
 	SetEthashDifficultyBombDelaySchedule(m Uint64BigMapEncodesHex) error
