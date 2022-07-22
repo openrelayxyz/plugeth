@@ -384,9 +384,11 @@ func prepare(ctx *cli.Context) {
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
-	if args := ctx.Args(); len(args) > 0 {
-		return fmt.Errorf("invalid command: %q", args[0])
-	}
+	// Removed for PluGeth
+	// if args := ctx.Args(); len(args) > 0 {
+	// 	return fmt.Errorf("invalid command: %q", args[0])
+	// }
+	
 	//begin PluGeth code injection 1/1
 	if err := plugins.Initialize(path.Join(ctx.GlobalString(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
 		return err
@@ -541,4 +543,3 @@ func unlockAccounts(ctx *cli.Context, stack *node.Node) {
 		unlockAccount(ks, account, i, passwords)
 	}
 }
-
