@@ -104,3 +104,9 @@ func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration
 func (w WrappedTracer) GetResult() (interface{}, error) {
 	return w.r.Result()
 }
+
+func (w WrappedTracer) CaptureTxStart (gasLimit uint64) {}
+
+func (w WrappedTracer) CaptureTxEnd (restGas uint64) {}
+
+func (w WrappedTracer) Stop(err error) {}

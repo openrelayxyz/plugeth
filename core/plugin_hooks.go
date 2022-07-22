@@ -263,6 +263,10 @@ func (mt *metaTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 	}
 }
 
+func (mt metaTracer) CaptureTxStart (gasLimit uint64) {}
+
+func (mt metaTracer) CaptureTxEnd (restGas uint64) {}
+
 func PluginGetBlockTracer(pl *plugins.PluginLoader, hash common.Hash, statedb *state.StateDB) *metaTracer {
 	//look for a function that takes whatever the ctx provides and statedb and returns a core.blocktracer append into meta tracer
 	tracerList := plugins.Lookup("GetLiveTracer", func(item interface{}) bool {
