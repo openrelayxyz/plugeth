@@ -88,6 +88,19 @@ func (f *MemFreezerRemoteServerAPI) Ancients() (uint64, error) {
 	return f.count, nil
 }
 
+func (f *MemFreezerRemoteServerAPI) AncientRange(kind string, start, count, maxBytes uint64) ([][]byte, error) {
+	res := make([][]byte, 0)
+	// fmt.Println("mock server called", "method=Ancients")
+	for i := uint64(0); i < count; i++ {
+		item := f.store[f.storeKey(kind, start+i)]
+		if len(item) > int(maxBytes) {
+			item = item[:int(maxBytes)]
+		}
+		res = append(res, item)
+	}
+	return res, nil
+}
+
 func (f *MemFreezerRemoteServerAPI) AncientSize(kind string) (uint64, error) {
 	// fmt.Println("mock server called", "method=AncientSize")
 	sum := uint64(0)
@@ -162,7 +175,28 @@ func (f *MemFreezerRemoteServerAPI) AppendRaw(kind string, num uint64, item []by
 	return nil
 }
 
-func (f *MemFreezerRemoteServerAPI) TruncateAncients(n uint64) error {
+func (f *MemFreezerRemoteServerAPI) TruncateTail(n uint64) error {
+	// fmt.Println("mock server called", "method=TruncateAncients")
+	if f.count <= n {
+		return nil
+	}
+	f.count = n
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for k := range f.store {
+		spl := strings.Split(k, "-")
+		num, err := strconv.ParseUint(spl[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		if num <= n {
+			delete(f.store, k)
+		}
+	}
+	return nil
+}
+
+func (f *MemFreezerRemoteServerAPI) TruncateHead(n uint64) error {
 	// fmt.Println("mock server called", "method=TruncateAncients")
 	if f.count <= n {
 		return nil

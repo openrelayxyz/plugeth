@@ -31,7 +31,9 @@ func (d *dbWrapper) AppendAncient(number uint64, hash, header, body, receipt, td
 func (d *dbWrapper) ModifyAncients(fn func(ethdb.AncientWriteOperator) error) (int64, error) {
 	return d.db.ModifyAncients(fn)
 }
-func (d *dbWrapper) TruncateAncients(n uint64) error { return d.db.TruncateAncients(n) }
+func (d *dbWrapper) TruncateAncients(n uint64) error {
+	return fmt.Errorf("TruncateAncients is no longer supported in geth 1.10.17 and above.")
+}
 func (d *dbWrapper) Sync() error                     { return d.db.Sync() }
 func (d *dbWrapper) Close() error                    { return d.db.Close() }
 func (d *dbWrapper) NewIterator(prefix []byte, start []byte) restricted.Iterator {

@@ -51,6 +51,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.RopstenFlag,
 			utils.SepoliaFlag,
 			utils.MintMeFlag,
+			utils.KilnFlag,
 			utils.SyncModeFlag,
 			utils.ExitWhenSyncedFlag,
 			utils.GCModeFlag,
@@ -58,9 +59,9 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.EthStatsURLFlag,
 			utils.IdentityFlag,
 			utils.LightKDFFlag,
-			utils.WhitelistFlag,
 			utils.ECBP1100Flag,
 			utils.ECBP1100NoDisableFlag,
+			utils.EthPeerRequiredBlocksFlag, // was WhitelistFlag before 1.10.17
 		},
 	},
 	{
@@ -83,6 +84,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.DeveloperFlag,
 			utils.DeveloperPeriodFlag,
 			utils.DeveloperPoWFlag,
+			utils.DeveloperGasLimitFlag,
 		},
 	},
 	{
@@ -126,6 +128,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.CacheSnapshotFlag,
 			utils.CacheNoPrefetchFlag,
 			utils.CachePreimagesFlag,
+			utils.FDLimitFlag,
 		},
 	},
 	{
@@ -155,6 +158,10 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.WSApiFlag,
 			utils.WSPathPrefixFlag,
 			utils.WSAllowedOriginsFlag,
+			utils.JWTSecretFlag,
+			utils.AuthListenFlag,
+			utils.AuthPortFlag,
+			utils.AuthVirtualHostsFlag,
 			utils.GraphQLEnabledFlag,
 			utils.GraphQLCORSDomainFlag,
 			utils.GraphQLVirtualHostsFlag,
@@ -232,6 +239,7 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 		Name: "ALIASED (deprecated)",
 		Flags: []cli.Flag{
 			utils.NoUSBFlag,
+			utils.LegacyWhitelistFlag,
 		},
 	},
 	{
@@ -240,7 +248,6 @@ var AppHelpFlagGroups = []flags.FlagGroup{
 			utils.SnapshotFlag,
 			utils.BloomFilterSizeFlag,
 			cli.HelpFlag,
-			utils.CatalystFlag,
 		},
 	},
 }

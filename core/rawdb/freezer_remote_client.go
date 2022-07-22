@@ -27,21 +27,52 @@ type FreezerRemoteClient struct {
 	writeMu    sync.Mutex
 }
 
+func (api *FreezerRemoteClient) Tail() (uint64, error) {
+	var res uint64
+	err := api.client.Call(&res, FreezerMethodTail)
+	return res, err
+}
+
+func (api *FreezerRemoteClient) TruncateHead(n uint64) error {
+	api.writeMu.Lock()
+	defer api.writeMu.Unlock()
+	return api.client.Call(nil, FreezerMethodTruncateHead, n)
+}
+
+func (api *FreezerRemoteClient) TruncateTail(n uint64) error {
+	api.writeMu.Lock()
+	defer api.writeMu.Unlock()
+	return api.client.Call(nil, FreezerMethodTruncateTail, n)
+}
+
+func (api *FreezerRemoteClient) MigrateTable(s string, f func([]byte) ([]byte, error)) error {
+	api.writeMu.Lock()
+	defer api.writeMu.Unlock()
+	// TODO/meowsbits/20220405: implement me
+	return nil
+}
+
 const (
-	FreezerMethodClose            = "freezer_close"
-	FreezerMethodHasAncient       = "freezer_hasAncient"
-	FreezerMethodAncient          = "freezer_ancient"
-	FreezerMethodAncients         = "freezer_ancients"
-	FreezerMethodAncientSize      = "freezer_ancientSize"
-	FreezerMethodAppendAncient    = "freezer_appendAncient"
-	FreezerMethodModifyAncients   = "freezer_modifyAncients"
-	FreezerMethodTruncateAncients = "freezer_truncateAncients"
-	FreezerMethodSync             = "freezer_sync"
+	FreezerMethodClose          = "freezer_close"
+	FreezerMethodHasAncient     = "freezer_hasAncient"
+	FreezerMethodAncient        = "freezer_ancient"
+	FreezerMethodAncients       = "freezer_ancients"
+	FreezerMethodAncientRange   = "freezer_ancientRange"
+	FreezerMethodAncientSize    = "freezer_ancientSize"
+	FreezerMethodAppendAncient  = "freezer_appendAncient"
+	FreezerMethodModifyAncients = "freezer_modifyAncients"
+	FreezerMethodSync           = "freezer_sync"
 
 	// FreezerMethodWriteAppend and FreezerMethodWriteAppendRaw are
 	// methods for re-written (get it?) freezer design with write batching.
 	FreezerMethodWriteAppend    = "freezer_append"
 	FreezerMethodWriteAppendRaw = "freezer_appendRaw"
+
+	// FreezerMethodTail and the following are methods are introduced from v1.10.17
+	FreezerMethodTail         = "freezer_tail"
+	FreezerMethodTruncateHead = "freezer_truncateHead"
+	FreezerMethodTruncateTail = "freezer_truncateTail"
+	FreezerMethodMigrateTable = "freezer_migrateTable"
 )
 
 // newFreezerRemoteClient constructs a rpc client to connect to a remote freezer
@@ -87,6 +118,12 @@ func (api *FreezerRemoteClient) Ancient(kind string, number uint64) ([]byte, err
 func (api *FreezerRemoteClient) Ancients() (uint64, error) {
 	var res uint64
 	err := api.client.Call(&res, FreezerMethodAncients)
+	return res, err
+}
+
+func (api *FreezerRemoteClient) AncientRange(kind string, start, count, maxBytes uint64) ([][]byte, error) {
+	var res [][]byte
+	err := api.client.Call(&res, FreezerMethodAncientRange, kind, start, count, maxBytes)
 	return res, err
 }
 
@@ -170,7 +207,7 @@ func (api *FreezerRemoteClient) ModifyAncients(fn func(ethdb.AncientWriteOperato
 	defer func() {
 		if err != nil {
 			log.Warn("Rolling back ancients", "target(previous)", prev)
-			if err := api.TruncateAncients(prev); err != nil {
+			if err := api.TruncateHead(prev); err != nil {
 				log.Error("Freezer table roll-back failed", "index", prev, "err", err)
 			}
 		}
@@ -183,13 +220,6 @@ func (api *FreezerRemoteClient) ModifyAncients(fn func(ethdb.AncientWriteOperato
 	}
 
 	return api.writeBatch.writeSize, nil
-}
-
-// TruncateAncients discards any recent data above the provided threshold number.
-func (api *FreezerRemoteClient) TruncateAncients(items uint64) error {
-	api.writeMu.Lock()
-	defer api.writeMu.Unlock()
-	return api.client.Call(nil, FreezerMethodTruncateAncients, items)
 }
 
 // Sync flushes all data tables to disk.

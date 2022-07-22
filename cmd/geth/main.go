@@ -20,11 +20,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+	"path"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -43,7 +43,8 @@ import (
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/plugins/wrappers/backendwrapper"
 
-	// Force-load the native, to trigger registration
+	// Force-load the tracer engines to trigger registration
+	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
 	"gopkg.in/urfave/cli.v1"
@@ -77,6 +78,7 @@ var (
 		utils.SmartCardDaemonPathFlag,
 		utils.OverrideMystiqueFlag,
 		utils.OverrideArrowGlacierFlag,
+		utils.OverrideTerminalTotalDifficulty,
 		utils.EthashCacheDirFlag,
 		utils.EthashCachesInMemoryFlag,
 		utils.EthashCachesOnDiskFlag,
@@ -111,7 +113,8 @@ var (
 		utils.UltraLightFractionFlag,
 		utils.UltraLightOnlyAnnounceFlag,
 		utils.LightNoSyncServeFlag,
-		utils.WhitelistFlag,
+		utils.EthPeerRequiredBlocksFlag,
+		utils.LegacyWhitelistFlag,
 		utils.BloomFilterSizeFlag,
 		utils.CacheFlag,
 		utils.CacheDatabaseFlag,
@@ -122,6 +125,7 @@ var (
 		utils.CacheSnapshotFlag,
 		utils.CacheNoPrefetchFlag,
 		utils.CachePreimagesFlag,
+		utils.FDLimitFlag,
 		utils.ListenPortFlag,
 		utils.MaxPeersFlag,
 		utils.MaxPendingPeersFlag,
@@ -147,6 +151,7 @@ var (
 		utils.DeveloperFlag,
 		utils.DeveloperPeriodFlag,
 		utils.DeveloperPoWFlag,
+		utils.DeveloperGasLimitFlag,
 		utils.RopstenFlag,
 		utils.SepoliaFlag,
 		utils.RinkebyFlag,
@@ -155,6 +160,7 @@ var (
 		utils.ClassicFlag,
 		utils.MordorFlag,
 		utils.KottiFlag,
+		utils.KilnFlag,
 		utils.VMEnableDebugFlag,
 		utils.NetworkIdFlag,
 		utils.EthStatsURLFlag,
@@ -171,7 +177,6 @@ var (
 		utils.ECBP1100Flag,
 		utils.ECBP1100NoDisableFlag,
 		configFileFlag,
-		utils.CatalystFlag,
 	}
 
 	rpcFlags = []cli.Flag{
@@ -179,6 +184,10 @@ var (
 		utils.HTTPListenAddrFlag,
 		utils.HTTPPortFlag,
 		utils.HTTPCORSDomainFlag,
+		utils.AuthListenFlag,
+		utils.AuthPortFlag,
+		utils.AuthVirtualHostsFlag,
+		utils.JWTSecretFlag,
 		utils.HTTPVirtualHostsFlag,
 		utils.GraphQLEnabledFlag,
 		utils.GraphQLCORSDomainFlag,
@@ -222,7 +231,7 @@ func init() {
 	// Initialize the CLI app and start Geth
 	app.Action = geth
 	app.HideVersion = true // we have a command to print the version
-	app.Copyright = "Copyright 2013-2021 The core-geth and go-ethereum Authors"
+	app.Copyright = "Copyright 2013-2022 The core-geth and go-ethereum Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		initCommand,
@@ -286,6 +295,9 @@ func checkMainnet(ctx *cli.Context) bool {
 	switch {
 	case ctx.GlobalIsSet(utils.RopstenFlag.Name):
 		log.Info("Starting Geth on Ropsten testnet...")
+
+	case ctx.GlobalIsSet(utils.SepoliaFlag.Name):
+		log.Info("Starting Geth on Sepolia testnet...")
 
 	case ctx.GlobalIsSet(utils.RinkebyFlag.Name):
 		log.Info("Starting Geth on Rinkeby testnet...")
@@ -352,6 +364,9 @@ func prepare(ctx *cli.Context) {
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
+	if args := ctx.Args(); len(args) > 0 {
+		return fmt.Errorf("invalid command: %q", args[0])
+	}
 	//begin PluGeth code injection 1/1
 	if err := plugins.Initialize(path.Join(ctx.GlobalString(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
 		return err
@@ -362,7 +377,7 @@ func geth(ctx *cli.Context) error {
 			return fmt.Errorf("invalid command: %q", args[0])
 		}
 	}
-	
+
 	prepare(ctx)
 	stack, backend := makeFullNode(ctx)
 	wrapperBackend := backendwrapper.NewBackend(backend)
@@ -374,7 +389,8 @@ func geth(ctx *cli.Context) error {
 	defer stack.Close()
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 	//end PluGeth injection
-	startNode(ctx, stack, backend)
+
+	startNode(ctx, stack, backend, false)
 	stack.Wait()
 	return nil
 }
@@ -382,11 +398,11 @@ func geth(ctx *cli.Context) error {
 // startNode boots up the system node and all registered protocols, after which
 // it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
 // miner.
-func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend) {
+func startNode(ctx *cli.Context, stack *node.Node, backend ethapi.Backend, isConsole bool) {
 	debug.Memsize.Add("node", stack)
 
 	// Start up the node itself
-	utils.StartNode(ctx, stack)
+	utils.StartNode(ctx, stack, isConsole)
 
 	// Unlock any account specifically requested
 	unlockAccounts(ctx, stack)
@@ -505,3 +521,4 @@ func unlockAccounts(ctx *cli.Context, stack *node.Node) {
 		unlockAccount(ks, account, i, passwords)
 	}
 }
+

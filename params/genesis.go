@@ -17,7 +17,9 @@
 package params
 
 import (
+	"encoding/json"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -90,9 +92,18 @@ func DefaultGoerliGenesisBlock() *genesisT.Genesis {
 	}
 }
 
+func DefaultKilnGenesisBlock() *genesisT.Genesis {
+	g := new(genesisT.Genesis)
+	reader := strings.NewReader(KilnAllocData)
+	if err := json.NewDecoder(reader).Decode(g); err != nil {
+		panic(err)
+	}
+	return g
+}
+
 // DeveloperGenesisBlock returns the 'geth --dev' genesis block. Note, this must
 // be seeded with the
-func DeveloperGenesisBlock(period uint64, faucet common.Address, useEthash bool) *genesisT.Genesis {
+func DeveloperGenesisBlock(period uint64, gasLimit uint64, faucet common.Address, useEthash bool) *genesisT.Genesis {
 	if !useEthash {
 		// Make a copy to avoid unpredicted contamination.
 		config := &goethereum.ChainConfig{}
@@ -104,7 +115,7 @@ func DeveloperGenesisBlock(period uint64, faucet common.Address, useEthash bool)
 		return &genesisT.Genesis{
 			Config:     config,
 			ExtraData:  append(append(make([]byte, 32), faucet[:]...), make([]byte, crypto.SignatureLength)...),
-			GasLimit:   6283185,
+			GasLimit:   gasLimit,
 			BaseFee:    big.NewInt(vars.InitialBaseFee),
 			Difficulty: big.NewInt(1),
 			Alloc: map[common.Address]genesisT.GenesisAccount{
@@ -172,6 +183,7 @@ func DeveloperGenesisBlock(period uint64, faucet common.Address, useEthash bool)
 		ExtraData:  append(append(make([]byte, 32), faucet[:]...), make([]byte, crypto.SignatureLength)...),
 		GasLimit:   6283185,
 		Difficulty: vars.MinimumDifficulty,
+		BaseFee:    big.NewInt(vars.InitialBaseFee),
 		Alloc: map[common.Address]genesisT.GenesisAccount{
 			common.BytesToAddress([]byte{1}): {Balance: big.NewInt(1)}, // ECRecover
 			common.BytesToAddress([]byte{2}): {Balance: big.NewInt(1)}, // SHA256

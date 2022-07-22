@@ -186,7 +186,7 @@ func pluginReorg(commonBlock *types.Block, oldChain, newChain types.Blocks) {
 }
 
 type PreTracer interface {
-	CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int) 
+	CapturePreStart(from common.Address, to *common.Address, input []byte, gas uint64, value *big.Int)
 
 }
 
@@ -235,22 +235,20 @@ func (mt *metaTracer) CaptureStart(env *vm.EVM, from common.Address, to common.A
 		tracer.CaptureStart(core.Address(from), core.Address(to), create, input, gas, value)
 	}
 }
-func (mt *metaTracer) CaptureState(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
+func (mt *metaTracer) CaptureState(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, rData []byte, depth int, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureState(pc, core.OpCode(op), gas, cost, statedbandtracerwrappers.NewWrappedScopeContext(scope), rData, depth, err)
 	}
 }
-func (mt *metaTracer) CaptureFault(env *vm.EVM, pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
+func (mt *metaTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, statedbandtracerwrappers.NewWrappedScopeContext(scope), depth, err)
 	}
 }
-func (mt *metaTracer) CaptureEnd(env *vm.EVM, output []byte, gasUsed uint64, t time.Duration, err error) {
+func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	for _, tracer := range mt.tracers {
 		tracer.CaptureEnd(output, gasUsed, t, err)
 	}
-}
-func (mt *metaTracer) CapturePreEVM(env *vm.EVM, inputs map[string]interface{}) {
 }
 
 func (mt *metaTracer) CaptureEnter(typ vm.OpCode, from common.Address, to common.Address, input []byte, gas uint64, value *big.Int) {

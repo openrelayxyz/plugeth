@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"math/big"
 	"os"
 	"reflect"
 	"runtime"
@@ -38,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/eth/tracers/logger"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
@@ -168,7 +168,7 @@ func (api *API) blockByNumberAndHash(ctx context.Context, number rpc.BlockNumber
 
 // TraceConfig holds extra parameters to trace functions.
 type TraceConfig struct {
-	*vm.LogConfig
+	*logger.Config
 	Tracer            *string
 	Timeout           *string
 	Reexec            *uint64
@@ -178,17 +178,17 @@ type TraceConfig struct {
 // TraceCallConfig is the config for traceCall API. It holds one more
 // field to override the state for tracing.
 type TraceCallConfig struct {
-	*vm.LogConfig
+	*logger.Config
 	Tracer            *string
 	Timeout           *string
 	Reexec            *uint64
-	NestedTraceOutput bool // Returns the trace output JSON nested under the trace name key. This allows full Parity compatibility to be achieved.
 	StateOverrides    *ethapi.StateOverride
+	NestedTraceOutput bool // Returns the trace output JSON nested under the trace name key. This allows full Parity compatibility to be achieved.
 }
 
 // StdTraceConfig holds extra parameters to standard-json trace functions.
 type StdTraceConfig struct {
-	vm.LogConfig
+	logger.Config
 	Reexec *uint64
 	TxHash common.Hash
 }
@@ -227,7 +227,7 @@ func getTraceConfigFromTraceCallConfig(config *TraceCallConfig) *TraceConfig {
 	var traceConfig *TraceConfig
 	if config != nil {
 		traceConfig = &TraceConfig{
-			LogConfig:         config.LogConfig,
+			Config:            config.Config,
 			Tracer:            config.Tracer,
 			Timeout:           config.Timeout,
 			Reexec:            config.Reexec,
@@ -299,7 +299,7 @@ func (api *API) traceChain(ctx context.Context, start, end *types.Block, config 
 						TxIndex:   i,
 						TxHash:    tx.Hash(),
 					}
-					res, err := api.traceTx(localctx, msg, txctx, blockCtx, task.statedb, nil, config)
+					res, err := api.traceTx(localctx, msg, txctx, blockCtx, task.statedb, config)
 					if err != nil {
 						task.results[i] = &txTraceResult{Error: err.Error()}
 						log.Warn("Tracing failed", "hash", tx.Hash(), "block", task.block.NumberU64(), "err", err)
@@ -470,7 +470,7 @@ func (api *API) TraceBlockByHash(ctx context.Context, hash common.Hash, config *
 
 // TraceBlock returns the structured logs created during the execution of EVM
 // and returns them as a JSON object.
-func (api *API) TraceBlock(ctx context.Context, blob []byte, config *TraceConfig) ([]*txTraceResult, error) {
+func (api *API) TraceBlock(ctx context.Context, blob hexutil.Bytes, config *TraceConfig) ([]*txTraceResult, error) {
 	block := new(types.Block)
 	if err := rlp.Decode(bytes.NewReader(blob), block); err != nil {
 		return nil, fmt.Errorf("could not decode block: %v", err)
@@ -610,11 +610,11 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 	if threads > len(txs) {
 		threads = len(txs)
 	}
-	blockCtx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 	blockHash := block.Hash()
 	for th := 0; th < threads; th++ {
 		pend.Add(1)
 		go func() {
+			blockCtx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 			defer pend.Done()
 			// Fetch and execute the next transaction trace tasks
 			for task := range jobs {
@@ -624,7 +624,7 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 					TxIndex:   task.index,
 					TxHash:    txs[task.index].Hash(),
 				}
-				res, err := api.traceTx(ctx, msg, txctx, blockCtx, task.statedb, nil, config)
+				res, err := api.traceTx(ctx, msg, txctx, blockCtx, task.statedb, config)
 				if err != nil {
 					results[task.index] = &txTraceResult{Error: err.Error()}
 					continue
@@ -635,6 +635,7 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 	}
 	// Feed the transactions into the tracers and return
 	var failed error
+	blockCtx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 	for i, tx := range txs {
 		// Send the trace task over for execution
 		jobs <- &txTraceTask{statedb: statedb.Copy(), index: i}
@@ -688,11 +689,11 @@ func (api *API) standardTraceBlockToFile(ctx context.Context, block *types.Block
 	}
 	// Retrieve the tracing configurations, or use default values
 	var (
-		logConfig vm.LogConfig
+		logConfig logger.Config
 		txHash    common.Hash
 	)
 	if config != nil {
-		logConfig = config.LogConfig
+		logConfig = config.Config
 		txHash = config.TxHash
 	}
 	logConfig.Debug = true
@@ -761,7 +762,7 @@ func (api *API) standardTraceBlockToFile(ctx context.Context, block *types.Block
 			writer = bufio.NewWriter(dump)
 			vmConf = vm.Config{
 				Debug:                   true,
-				Tracer:                  vm.NewJSONLogger(&logConfig, writer),
+				Tracer:                  logger.NewJSONLogger(&logConfig, writer),
 				EnablePreimageRecording: true,
 			}
 		}
@@ -830,7 +831,7 @@ func (api *API) TraceTransaction(ctx context.Context, hash common.Hash, config *
 		TxIndex:   int(index),
 		TxHash:    hash,
 	}
-	return api.traceTx(ctx, msg, txctx, vmctx, statedb, nil, config)
+	return api.traceTx(ctx, msg, txctx, vmctx, statedb, config)
 }
 
 // TraceCall lets you trace a given eth_call. It collects the structured logs
@@ -875,46 +876,8 @@ func (api *API) TraceCall(ctx context.Context, args ethapi.TransactionArgs, bloc
 	}
 	vmctx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 
-	originalCanTransfer := vmctx.CanTransfer
-	originalTransfer := vmctx.Transfer
-
-	// Store the truth on wether from acount has enough balance for context usage
-	gasCost := new(big.Int).Mul(new(big.Int).SetUint64(msg.Gas()), msg.GasPrice())
-	totalCost := new(big.Int).Add(gasCost, msg.Value())
-	hasFromSufficientBalanceForValueAndGasCost := vmctx.CanTransfer(statedb, msg.From(), totalCost)
-	hasFromSufficientBalanceForGasCost := vmctx.CanTransfer(statedb, msg.From(), gasCost)
-
-	// This is needed for trace_call (debug mode),
-	// as the Transaction is being run on top of the block transactions,
-	// which might lead into ErrInsufficientFundsForTransfer error
-	vmctx.CanTransfer = func(db vm.StateDB, sender common.Address, amount *big.Int) bool {
-		if msg.From() == sender {
-			return true
-		}
-		res := originalCanTransfer(db, sender, amount)
-		return res
-	}
-
-	// If the actual transaction would fail, then their is no reason to actually transfer any balance at all
-	vmctx.Transfer = func(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
-		toAmount := new(big.Int).Set(amount)
-
-		senderBalance := db.GetBalance(sender)
-		if senderBalance.Cmp(toAmount) < 0 {
-			toAmount.Set(big.NewInt(0))
-		}
-
-		originalTransfer(db, sender, recipient, toAmount)
-	}
-
-	// Add extra context needed for state_diff
-	taskExtraContext := map[string]interface{}{
-		"hasFromSufficientBalanceForValueAndGasCost": hasFromSufficientBalanceForValueAndGasCost,
-		"hasFromSufficientBalanceForGasCost":         hasFromSufficientBalanceForGasCost,
-	}
-
 	traceConfig := getTraceConfigFromTraceCallConfig(config)
-	return api.traceTx(ctx, msg, new(Context), vmctx, statedb, taskExtraContext, traceConfig)
+	return api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig)
 }
 
 // TraceCallMany lets you trace a given eth_call. It collects the structured logs created during the execution of EVM
@@ -964,45 +927,7 @@ func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs,
 		}
 		vmctx := core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
 
-		originalCanTransfer := vmctx.CanTransfer
-		originalTransfer := vmctx.Transfer
-
-		// Store the truth on wether from acount has enough balance for context usage
-		gasCost := new(big.Int).Mul(new(big.Int).SetUint64(msg.Gas()), msg.GasPrice())
-		totalCost := new(big.Int).Add(gasCost, msg.Value())
-		hasFromSufficientBalanceForValueAndGasCost := vmctx.CanTransfer(statedb, msg.From(), totalCost)
-		hasFromSufficientBalanceForGasCost := vmctx.CanTransfer(statedb, msg.From(), gasCost)
-
-		// This is needed for trace_call (debug mode),
-		// as the Transaction is being run on top of the block transactions,
-		// which might lead into ErrInsufficientFundsForTransfer error
-		vmctx.CanTransfer = func(db vm.StateDB, sender common.Address, amount *big.Int) bool {
-			if msg.From() == sender {
-				return true
-			}
-			res := originalCanTransfer(db, sender, amount)
-			return res
-		}
-
-		// If the actual transaction would fail, then their is no reason to actually transfer any balance at all
-		vmctx.Transfer = func(db vm.StateDB, sender, recipient common.Address, amount *big.Int) {
-			toAmount := new(big.Int).Set(amount)
-
-			senderBalance := db.GetBalance(sender)
-			if senderBalance.Cmp(toAmount) < 0 {
-				toAmount.Set(big.NewInt(0))
-			}
-
-			originalTransfer(db, sender, recipient, toAmount)
-		}
-
-		// Add extra context needed for state_diff
-		taskExtraContext := map[string]interface{}{
-			"hasFromSufficientBalanceForValueAndGasCost": hasFromSufficientBalanceForValueAndGasCost,
-			"hasFromSufficientBalanceForGasCost":         hasFromSufficientBalanceForGasCost,
-		}
-
-		res, err := api.traceTx(ctx, msg, new(Context), vmctx, statedb, taskExtraContext, traceConfig)
+		res, err := api.traceTx(ctx, msg, new(Context), vmctx, statedb, traceConfig)
 		if err != nil {
 			results[idx] = &txTraceResult{Error: err.Error()}
 			continue
@@ -1021,7 +946,7 @@ func (api *API) TraceCallMany(ctx context.Context, txs []ethapi.TransactionArgs,
 // traceTx configures a new tracer according to the provided configuration, and
 // executes the given message in the provided environment. The return value will
 // be tracer dependent.
-func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Context, vmctx vm.BlockContext, statedb *state.StateDB, extraContext map[string]interface{}, config *TraceConfig) (interface{}, error) {
+func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Context, vmctx vm.BlockContext, statedb *state.StateDB, config *TraceConfig) (interface{}, error) {
 	// Assemble the structured logger or the JavaScript tracer
 	var (
 		tracer    vm.EVMLogger
@@ -1030,7 +955,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 	)
 	switch {
 	case config == nil:
-		tracer = vm.NewStructLogger(nil)
+		tracer = logger.NewStructLogger(nil)
 	case config.Tracer != nil:
 		// Define a meaningful timeout of a single transaction trace
 		timeout := defaultTraceTimeout
@@ -1061,7 +986,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 			}
 		}
 	default:
-		tracer = vm.NewStructLogger(config.LogConfig)
+		tracer = logger.NewStructLogger(config.Config)
 	}
 	// Run the transaction with tracing enabled.
 	vmenv := vm.NewEVM(vmctx, txContext, statedb, api.backend.ChainConfig(), vm.Config{Debug: true, Tracer: tracer, NoBaseFee: true})
@@ -1069,31 +994,8 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 	// Call Prepare to clear out the statedb access list
 	statedb.Prepare(txctx.TxHash, txctx.TxIndex)
 
-	switch tracer := tracer.(type) {
-	case *jsTracer:
-		if extraContext == nil {
-			extraContext = map[string]interface{}{}
-		}
-
-		if txctx.TxHash != (common.Hash{}) {
-			extraContext["transactionHash"] = txctx.TxHash.Hex()
-		}
-		if txctx.BlockHash != (common.Hash{}) {
-			extraContext["blockHash"] = txctx.BlockHash.Hex()
-		}
-		extraContext["transactionPosition"] = uint64(txctx.TxIndex)
-
-		// Add useful context for all tracers
-		extraContext["from"] = message.From()
-		if message.To() != nil {
-			extraContext["msgTo"] = *message.To()
-		}
-		extraContext["coinbase"] = vmctx.Coinbase
-
-		extraContext["gasLimit"] = message.Gas()
-		extraContext["gasPrice"] = message.GasPrice()
-
-		tracer.CapturePreEVM(vmenv, extraContext)
+	if traceStateCapturer, ok := tracer.(vm.EVMLogger_StateCapturer); ok {
+		traceStateCapturer.CapturePreEVM(vmenv)
 	}
 
 	result, err := core.ApplyMessage(vmenv, message, new(core.GasPool).AddGas(message.Gas()))
@@ -1103,7 +1005,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 
 	// Depending on the tracer type, format and return the output.
 	switch tracer := tracer.(type) {
-	case *vm.StructLogger:
+	case *logger.StructLogger:
 		// If the result contains a revert reason, return it.
 		returnVal := fmt.Sprintf("%x", result.Return())
 		if len(result.Revert()) > 0 {
