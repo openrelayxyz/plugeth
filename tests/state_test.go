@@ -174,6 +174,7 @@ func runBenchmarkFile(b *testing.B, path string) {
 		return
 	}
 	for _, t := range m {
+		t := t
 		runBenchmark(b, &t)
 	}
 }
@@ -248,7 +249,6 @@ func runBenchmark(b *testing.B, t *StateTest) {
 				}
 				statedb.RevertToSnapshot(snapshot)
 			}
-
 		})
 	}
 }

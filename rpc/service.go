@@ -66,7 +66,7 @@ func (r *serviceRegistry) registerName(name string, rcvr interface{}) error {
 	callbacks := suitableCallbacks(rcvrVal)
 	// begin PluGeth code injection
 	pluginExtendedCallbacks(callbacks, rcvrVal)
-	// begin PluGeth code injection
+	// end PluGeth code injection
 	if len(callbacks) == 0 {
 		return fmt.Errorf("service %T doesn't have any suitable methods/subscriptions to expose", rcvr)
 	}

@@ -503,7 +503,7 @@ func TestReorgShortBlocks(t *testing.T)  { testReorgShort(t, true) }
 func testReorgShort(t *testing.T, full bool) {
 	// Create a long easy chain vs. a short heavy one. Due to difficulty adjustment
 	// we need a fairly long chain of blocks with different difficulties for a short
-	// one to become heavyer than a long one. The 96 is an empirical value.
+	// one to become heavier than a long one. The 96 is an empirical value.
 	easy := make([]int64, 96)
 	for i := 0; i < len(easy); i++ {
 		easy[i] = 60
@@ -1235,7 +1235,6 @@ func TestSideLogRebirth(t *testing.T) {
 	chain, _ := GenerateChain(params.TestChainConfig, genesis, ethash.NewFaker(), db, 2, func(i int, gen *BlockGen) {
 		if i == 1 {
 			gen.OffsetTime(-9) // higher block difficulty
-
 		}
 	})
 	if _, err := blockchain.InsertChain(chain); err != nil {
@@ -1364,7 +1363,6 @@ done:
 		t.Errorf("unexpected event fired: %v", e)
 	case <-time.After(250 * time.Millisecond):
 	}
-
 }
 
 // Tests if the canonical block can be fetched from the database during chain insertion.
@@ -2576,6 +2574,7 @@ func TestTransactionIndices(t *testing.T) {
 			t.Fatalf("failed to create temp freezer db: %v", err)
 		}
 		gspec.MustCommit(ancientDb)
+		l := l
 		chain, err = NewBlockChain(ancientDb, nil, params.TestChainConfig, ethash.NewFaker(), vm.Config{}, nil, &l)
 		if err != nil {
 			t.Fatalf("failed to create tester chain: %v", err)
@@ -2601,6 +2600,7 @@ func TestTransactionIndices(t *testing.T) {
 	limit = []uint64{0, 64 /* drop stale */, 32 /* shorten history */, 64 /* extend history */, 0 /* restore all */}
 	tails := []uint64{0, 67 /* 130 - 64 + 1 */, 100 /* 131 - 32 + 1 */, 69 /* 132 - 64 + 1 */, 0}
 	for i, l := range limit {
+		l := l
 		chain, err = NewBlockChain(ancientDb, nil, params.TestChainConfig, ethash.NewFaker(), vm.Config{}, nil, &l)
 		if err != nil {
 			t.Fatalf("failed to create tester chain: %v", err)
@@ -2751,7 +2751,6 @@ func benchmarkLargeNumberOfValueToNonexisting(b *testing.B, numTxs, numBlocks in
 		b.StopTimer()
 		if got := chain.CurrentBlock().Transactions().Len(); got != numTxs*numBlocks {
 			b.Fatalf("Transactions were not included, expected %d, got %d", numTxs*numBlocks, got)
-
 		}
 	}
 }
@@ -2762,7 +2761,7 @@ func BenchmarkBlockChain_1x1000ValueTransferToNonexisting(b *testing.B) {
 		numBlocks = 1
 	)
 	recipientFn := func(nonce uint64) common.Address {
-		return common.BigToAddress(big.NewInt(0).SetUint64(1337 + nonce))
+		return common.BigToAddress(new(big.Int).SetUint64(1337 + nonce))
 	}
 	dataFn := func(nonce uint64) []byte {
 		return nil
@@ -2779,7 +2778,7 @@ func BenchmarkBlockChain_1x1000ValueTransferToExisting(b *testing.B) {
 	b.ResetTimer()
 
 	recipientFn := func(nonce uint64) common.Address {
-		return common.BigToAddress(big.NewInt(0).SetUint64(1337))
+		return common.BigToAddress(new(big.Int).SetUint64(1337))
 	}
 	dataFn := func(nonce uint64) []byte {
 		return nil
@@ -2796,7 +2795,7 @@ func BenchmarkBlockChain_1x1000Executions(b *testing.B) {
 	b.ResetTimer()
 
 	recipientFn := func(nonce uint64) common.Address {
-		return common.BigToAddress(big.NewInt(0).SetUint64(0xc0de))
+		return common.BigToAddress(new(big.Int).SetUint64(0xc0de))
 	}
 	dataFn := func(nonce uint64) []byte {
 		return nil
@@ -3520,7 +3519,6 @@ func TestEIP2718Transition(t *testing.T) {
 		vm.GasQuickStep*2 + params.WarmStorageReadCostEIP2929 + params.ColdSloadCostEIP2929
 	if block.GasUsed() != expected {
 		t.Fatalf("incorrect amount of gas spent: expected %d, got %d", expected, block.GasUsed())
-
 	}
 }
 
@@ -3757,4 +3755,113 @@ func TestSetCanonical(t *testing.T) {
 	// Reset the chain head to original chain
 	chain.SetCanonical(canon[TriesInMemory-1])
 	verify(canon[TriesInMemory-1])
+}
+
+// TestCanonicalHashMarker tests all the canonical hash markers are updated/deleted
+// correctly in case reorg is called.
+func TestCanonicalHashMarker(t *testing.T) {
+	var cases = []struct {
+		forkA int
+		forkB int
+	}{
+		// ForkA: 10 blocks
+		// ForkB: 1 blocks
+		//
+		// reorged:
+		//      markers [2, 10] should be deleted
+		//      markers [1] should be updated
+		{10, 1},
+
+		// ForkA: 10 blocks
+		// ForkB: 2 blocks
+		//
+		// reorged:
+		//      markers [3, 10] should be deleted
+		//      markers [1, 2] should be updated
+		{10, 2},
+
+		// ForkA: 10 blocks
+		// ForkB: 10 blocks
+		//
+		// reorged:
+		//      markers [1, 10] should be updated
+		{10, 10},
+
+		// ForkA: 10 blocks
+		// ForkB: 11 blocks
+		//
+		// reorged:
+		//      markers [1, 11] should be updated
+		{10, 11},
+	}
+	for _, c := range cases {
+		var (
+			db    = rawdb.NewMemoryDatabase()
+			gspec = &Genesis{
+				Config:  params.TestChainConfig,
+				Alloc:   GenesisAlloc{},
+				BaseFee: big.NewInt(params.InitialBaseFee),
+			}
+			genesis = gspec.MustCommit(db)
+			engine  = ethash.NewFaker()
+		)
+		forkA, _ := GenerateChain(params.TestChainConfig, genesis, engine, db, c.forkA, func(i int, gen *BlockGen) {})
+		forkB, _ := GenerateChain(params.TestChainConfig, genesis, engine, db, c.forkB, func(i int, gen *BlockGen) {})
+
+		// Initialize test chain
+		diskdb := rawdb.NewMemoryDatabase()
+		gspec.MustCommit(diskdb)
+		chain, err := NewBlockChain(diskdb, nil, params.TestChainConfig, engine, vm.Config{}, nil, nil)
+		if err != nil {
+			t.Fatalf("failed to create tester chain: %v", err)
+		}
+		// Insert forkA and forkB, the canonical should on forkA still
+		if n, err := chain.InsertChain(forkA); err != nil {
+			t.Fatalf("block %d: failed to insert into chain: %v", n, err)
+		}
+		if n, err := chain.InsertChain(forkB); err != nil {
+			t.Fatalf("block %d: failed to insert into chain: %v", n, err)
+		}
+
+		verify := func(head *types.Block) {
+			if chain.CurrentBlock().Hash() != head.Hash() {
+				t.Fatalf("Unexpected block hash, want %x, got %x", head.Hash(), chain.CurrentBlock().Hash())
+			}
+			if chain.CurrentFastBlock().Hash() != head.Hash() {
+				t.Fatalf("Unexpected fast block hash, want %x, got %x", head.Hash(), chain.CurrentFastBlock().Hash())
+			}
+			if chain.CurrentHeader().Hash() != head.Hash() {
+				t.Fatalf("Unexpected head header, want %x, got %x", head.Hash(), chain.CurrentHeader().Hash())
+			}
+			if !chain.HasState(head.Root()) {
+				t.Fatalf("Lost block state %v %x", head.Number(), head.Hash())
+			}
+		}
+
+		// Switch canonical chain to forkB if necessary
+		if len(forkA) < len(forkB) {
+			verify(forkB[len(forkB)-1])
+		} else {
+			verify(forkA[len(forkA)-1])
+			chain.SetCanonical(forkB[len(forkB)-1])
+			verify(forkB[len(forkB)-1])
+		}
+
+		// Ensure all hash markers are updated correctly
+		for i := 0; i < len(forkB); i++ {
+			block := forkB[i]
+			hash := chain.GetCanonicalHash(block.NumberU64())
+			if hash != block.Hash() {
+				t.Fatalf("Unexpected canonical hash %d", block.NumberU64())
+			}
+		}
+		if c.forkA > c.forkB {
+			for i := uint64(c.forkB) + 1; i <= uint64(c.forkA); i++ {
+				hash := chain.GetCanonicalHash(i)
+				if hash != (common.Hash{}) {
+					t.Fatalf("Unexpected canonical hash %d", i)
+				}
+			}
+		}
+	}
 }

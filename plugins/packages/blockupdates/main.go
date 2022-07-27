@@ -18,7 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli/v2"
 	"io"
 )
 
