@@ -882,6 +882,17 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 	case config == nil:
 		tracer = logger.NewStructLogger(nil)
 	case config.Tracer != nil:
+		// Get the tracer from the plugin loader
+		//begin PluGeth code injection
+		if tr, ok := getPluginTracer(*config.Tracer); ok {
+			//end PluGeth code injection
+			tracer = tr(statedb, vmctx)
+		} else {
+			tracer, err = New(*config.Tracer, txctx)
+			if err != nil {
+				return nil, err
+			}
+		}
 		// Define a meaningful timeout of a single transaction trace
 		timeout := defaultTraceTimeout
 		if config.Timeout != nil {
