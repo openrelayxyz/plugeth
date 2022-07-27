@@ -333,6 +333,9 @@ func (h *handler) handleCall(cp *callProc, msg *jsonrpcMessage) *jsonrpcMessage 
 	if err != nil {
 		return msg.errorResponse(&invalidParamsError{err.Error()})
 	}
+	//begin PluGeth code injection
+	pluginGetRPCCalls(string(msg.ID), string(msg.Method), string(msg.Params))
+	//begin PluGeth code injection
 	start := time.Now()
 	answer := h.runMethod(cp.ctx, msg, callb, args)
 
