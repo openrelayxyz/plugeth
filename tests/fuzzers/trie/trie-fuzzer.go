@@ -84,11 +84,9 @@ func (ds *dataSource) Ended() bool {
 }
 
 func Generate(input []byte) randTest {
-
 	var allKeys [][]byte
 	r := newDataSource(input)
 	genKey := func() []byte {
-
 		if len(allKeys) < 2 || r.readByte() < 0x0f {
 			// new key
 			key := make([]byte, r.readByte()%50)
@@ -103,7 +101,6 @@ func Generate(input []byte) randTest {
 	var steps randTest
 
 	for i := 0; !r.Ended(); i++ {
-
 		step := randTestStep{op: int(r.readByte()) % opMax}
 		switch step.op {
 		case opUpdate:
@@ -141,10 +138,9 @@ func Fuzz(input []byte) int {
 }
 
 func runRandTest(rt randTest) error {
-
 	triedb := trie.NewDatabase(memorydb.New())
 
-	tr, _ := trie.New(common.Hash{}, triedb)
+	tr := trie.NewEmpty(triedb)
 	values := make(map[string]string) // tracks content of the trie
 
 	for i, step := range rt {
@@ -159,7 +155,7 @@ func runRandTest(rt randTest) error {
 			v := tr.Get(step.key)
 			want := values[string(step.key)]
 			if string(v) != want {
-				rt[i].err = fmt.Errorf("mismatch for key 0x%x, got 0x%x want 0x%x", step.key, v, want)
+				rt[i].err = fmt.Errorf("mismatch for key %#x, got %#x want %#x", step.key, v, want)
 			}
 		case opCommit:
 			_, _, rt[i].err = tr.Commit(nil)
@@ -170,13 +166,13 @@ func runRandTest(rt randTest) error {
 			if err != nil {
 				return err
 			}
-			newtr, err := trie.New(hash, triedb)
+			newtr, err := trie.New(common.Hash{}, hash, triedb)
 			if err != nil {
 				return err
 			}
 			tr = newtr
 		case opItercheckhash:
-			checktr, _ := trie.New(common.Hash{}, triedb)
+			checktr := trie.NewEmpty(triedb)
 			it := trie.NewIterator(tr.NodeIterator(nil))
 			for it.Next() {
 				checktr.Update(it.Key, it.Value)

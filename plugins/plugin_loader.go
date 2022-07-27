@@ -13,7 +13,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli/v2"
 )
 
 type Subcommand func(*cli.Context, []string) error
@@ -132,7 +132,7 @@ func (pl *PluginLoader) Initialize(ctx *cli.Context) {
 }
 
 func (pl *PluginLoader) RunSubcommand(ctx *cli.Context) (bool, error) {
-	args := ctx.Args()
+	args := ctx.Args().Slice()
 	if len(args) == 0 {
 		return false, fmt.Errorf("no subcommand arguments")
 	}
