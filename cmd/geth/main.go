@@ -409,6 +409,7 @@ func geth(ctx *cli.Context) error {
 		return err
 	}
 	defer stack.Close()
+	defer pluginsOnShutdown()
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 	//end PluGeth injection
 

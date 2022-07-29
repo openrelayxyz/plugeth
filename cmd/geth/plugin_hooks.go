@@ -84,3 +84,21 @@ func pluginsInitializeNode(stack *node.Node, backend restricted.Backend) {
 	}
 	InitializeNode(plugins.DefaultPluginLoader, stack, backend)
 }
+
+func OnShutdown(pl *plugins.PluginLoader) {
+	fnList := pl.Lookup("OnShutdown", func(item interface{}) bool {
+		_, ok := item.(func())
+		return ok
+	})
+	for _, fni := range fnList {
+		fni.(func())()
+	}
+}
+
+func pluginsOnShutdown() {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting OnShutdown, but default PluginLoader has not been initialized")
+		return
+	}
+	OnShutdown(plugins.DefaultPluginLoader)
+}
