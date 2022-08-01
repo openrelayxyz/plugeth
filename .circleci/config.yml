@@ -6,7 +6,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/go:1.17.2
+      - image: cimg/go:1.18.4
     steps:
       - checkout
       - run:
@@ -38,7 +38,7 @@ jobs:
           command: go test ./core/rawdb/
   build_geth_push:
     docker: # run the steps with Docker
-      - image: cimg/go:1.17.2 # ...with this image as the primary container
+      - image: cimg/go:1.18.4 # ...with this image as the primary container
       # this is where all `steps` will run
     steps:
       - checkout
