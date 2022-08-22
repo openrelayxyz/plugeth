@@ -173,8 +173,8 @@ func (b *Backend) TxPoolContent() (map[core.Address][][]byte, map[core.Address][
 func (b *Backend) BloomStatus() (uint64, uint64) {
 	return b.b.BloomStatus()
 }
-func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash) ([][]byte, error) {
-	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash))
+func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash, number uint64) ([][]byte, error) {
+	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash), number)
 	if err != nil {
 		return nil, err
 	}

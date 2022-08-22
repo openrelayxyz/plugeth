@@ -4,7 +4,7 @@ package rawdb
 import (
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/rlp"
+	// "github.com/ethereum/go-ethereum/rlp"
 	"sync"
 )
 
@@ -57,64 +57,64 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 				fn(i, update)
 			}
 		}
-		appendAncientFnList := pl.Lookup("AppendAncient", func(item interface{}) bool {
+		_ = pl.Lookup("AppendAncient", func(item interface{}) bool {
 			_, ok := item.(func(number uint64, hash, header, body, receipts, td []byte))
 			if ok { log.Warn("PlugEth's AppendAncient is deprecated. Please update to ModifyAncients.") }
 			return ok
 		})
-		if len(appendAncientFnList) > 0 {
-			var (
-				hash []byte
-				header []byte
-				body []byte
-				receipts []byte
-				td []byte
-			)
-			if hashi, ok := update[freezerHashTable]; ok {
-				switch v := hashi.(type) {
-				case []byte:
-					hash = v
-				default:
-					hash, _ = rlp.EncodeToBytes(v)
-				}
-			}
-			if headeri, ok := update[freezerHeaderTable]; ok {
-				switch v := headeri.(type) {
-				case []byte:
-					header = v
-				default:
-					header, _ = rlp.EncodeToBytes(v)
-				}
-			}
-			if bodyi, ok := update[freezerBodiesTable]; ok {
-				switch v := bodyi.(type) {
-				case []byte:
-					body = v
-				default:
-					body, _ = rlp.EncodeToBytes(v)
-				}
-			}
-			if receiptsi, ok := update[freezerReceiptTable]; ok {
-				switch v := receiptsi.(type) {
-				case []byte:
-					receipts = v
-				default:
-					receipts, _ = rlp.EncodeToBytes(v)
-				}
-			}
-			if tdi, ok := update[freezerDifficultyTable]; ok {
-				switch v := tdi.(type) {
-				case []byte:
-					td = v
-				default:
-					td, _ = rlp.EncodeToBytes(v)
-				}
-			}
-			for _, fni := range appendAncientFnList {
-				if fn, ok := fni.(func(number uint64, hash, header, body, receipts, td []byte)); ok {
-					fn(i, hash, header, body, receipts, td)
-				}
-			}
-		}
+		// if len(appendAncientFnList) > 0 {
+		// 	var (
+		// 		hash []byte
+		// 		header []byte
+		// 		body []byte
+		// 		receipts []byte
+		// 		td []byte
+		// 	)
+		// 	if hashi, ok := update[freezerHashTable]; ok {
+		// 		switch v := hashi.(type) {
+		// 		case []byte:
+		// 			hash = v
+		// 		default:
+		// 			hash, _ = rlp.EncodeToBytes(v)
+		// 		}
+		// 	}
+		// 	if headeri, ok := update[freezerHeaderTable]; ok {
+		// 		switch v := headeri.(type) {
+		// 		case []byte:
+		// 			header = v
+		// 		default:
+		// 			header, _ = rlp.EncodeToBytes(v)
+		// 		}
+		// 	}
+		// 	if bodyi, ok := update[freezerBodiesTable]; ok {
+		// 		switch v := bodyi.(type) {
+		// 		case []byte:
+		// 			body = v
+		// 		default:
+		// 			body, _ = rlp.EncodeToBytes(v)
+		// 		}
+		// 	}
+		// 	if receiptsi, ok := update[freezerReceiptTable]; ok {
+		// 		switch v := receiptsi.(type) {
+		// 		case []byte:
+		// 			receipts = v
+		// 		default:
+		// 			receipts, _ = rlp.EncodeToBytes(v)
+		// 		}
+		// 	}
+		// 	if tdi, ok := update[freezerDifficultyTable]; ok {
+		// 		switch v := tdi.(type) {
+		// 		case []byte:
+		// 			td = v
+		// 		default:
+		// 			td, _ = rlp.EncodeToBytes(v)
+		// 		}
+		// 	}
+		// 	for _, fni := range appendAncientFnList {
+		// 		if fn, ok := fni.(func(number uint64, hash, header, body, receipts, td []byte)); ok {
+		// 			fn(i, hash, header, body, receipts, td)
+		// 		}
+		// 	}
+		// }
 	}
 }
