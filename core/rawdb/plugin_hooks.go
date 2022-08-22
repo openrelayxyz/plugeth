@@ -59,7 +59,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 		}
 		appendAncientFnList := pl.Lookup("AppendAncient", func(item interface{}) bool {
 			_, ok := item.(func(number uint64, hash, header, body, receipts, td []byte))
-			if ok { log.Warn("PlugEth's AppendAncient is deprecated. Please update to ModifyAncients.") }
+			if ok { log.Warn("PluGeth's AppendAncient is deprecated. Please update to ModifyAncients.") }
 			return ok
 		})
 		if len(appendAncientFnList) > 0 {
@@ -70,7 +70,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 				receipts []byte
 				td []byte
 			)
-			if hashi, ok := update[freezerHashTable]; ok {
+			if hashi, ok := update[chainFreezerHashTable]; ok {
 				switch v := hashi.(type) {
 				case []byte:
 					hash = v
@@ -78,7 +78,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 					hash, _ = rlp.EncodeToBytes(v)
 				}
 			}
-			if headeri, ok := update[freezerHeaderTable]; ok {
+			if headeri, ok := update[chainFreezerHeaderTable]; ok {
 				switch v := headeri.(type) {
 				case []byte:
 					header = v
@@ -86,7 +86,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 					header, _ = rlp.EncodeToBytes(v)
 				}
 			}
-			if bodyi, ok := update[freezerBodiesTable]; ok {
+			if bodyi, ok := update[chainFreezerBodiesTable]; ok {
 				switch v := bodyi.(type) {
 				case []byte:
 					body = v
@@ -94,7 +94,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 					body, _ = rlp.EncodeToBytes(v)
 				}
 			}
-			if receiptsi, ok := update[freezerReceiptTable]; ok {
+			if receiptsi, ok := update[chainFreezerReceiptTable]; ok {
 				switch v := receiptsi.(type) {
 				case []byte:
 					receipts = v
@@ -102,7 +102,7 @@ func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
 					receipts, _ = rlp.EncodeToBytes(v)
 				}
 			}
-			if tdi, ok := update[freezerDifficultyTable]; ok {
+			if tdi, ok := update[chainFreezerDifficultyTable]; ok {
 				switch v := tdi.(type) {
 				case []byte:
 					td = v

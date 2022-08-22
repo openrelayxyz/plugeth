@@ -174,7 +174,8 @@ func (b *Backend) BloomStatus() (uint64, uint64) {
 	return b.b.BloomStatus()
 }
 func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash) ([][]byte, error) {
-	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash))
+	header, _ := b.b.HeaderByHash(ctx, common.Hash(blockHash))
+	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash), uint64(header.Number.Uint64()))
 	if err != nil {
 		return nil, err
 	}
