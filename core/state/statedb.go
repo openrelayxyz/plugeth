@@ -917,18 +917,18 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		storageTrieNodes int
 		nodes            = trie.NewMergedNodeSet()
 	)
-	// PluGeth injection
+	// begin PluGeth injection
 	codeUpdates := make(map[common.Hash][]byte)
-	// PluGeth injection
+	// end PluGeth injection
 	codeWriter := s.db.TrieDB().DiskDB().NewBatch()
 	for addr := range s.stateObjectsDirty {
 		if obj := s.stateObjects[addr]; !obj.deleted {
 			// Write any contract code associated with the state object
 			if obj.code != nil && obj.dirtyCode {
 				rawdb.WriteCode(codeWriter, common.BytesToHash(obj.CodeHash()), obj.code)
-				// PluGeth injection
+				// begin PluGeth injection
 				codeUpdates[common.BytesToHash(obj.CodeHash())] = obj.code
-				// PluGeth injection
+				// end PluGeth injection
 				obj.dirtyCode = false
 			}
 			// Write any storage changes in the state object to its storage trie
