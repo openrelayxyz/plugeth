@@ -151,6 +151,15 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 			sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 		}
 	}
+	// Start PluGeth section
+	if sdb.snap == nil {
+		log.Debug("Snapshots not availble. Using plugin snapshot.")
+		sdb.snap = &pluginSnapshot{root}
+		sdb.snapDestructs = make(map[common.Hash]struct{})
+		sdb.snapAccounts = make(map[common.Hash][]byte)
+		sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
+	}
+	// End PluGeth section
 	return sdb, nil
 }
 
@@ -904,12 +913,18 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 
 	// Commit objects to the trie, measuring the elapsed time
 	var storageCommitted int
+	// begin PluGeth injection
+	codeUpdates := make(map[common.Hash][]byte)
+	// end PluGeth injection
 	codeWriter := s.db.TrieDB().DiskDB().NewBatch()
 	for addr := range s.stateObjectsDirty {
 		if obj := s.stateObjects[addr]; !obj.deleted {
 			// Write any contract code associated with the state object
 			if obj.code != nil && obj.dirtyCode {
 				rawdb.WriteCode(codeWriter, common.BytesToHash(obj.CodeHash()), obj.code)
+				// begin PluGeth injection
+				codeUpdates[common.BytesToHash(obj.CodeHash())] = obj.code
+				// end PluGeth injection
 				obj.dirtyCode = false
 			}
 			// Write any storage changes in the state object to its storage trie
@@ -967,16 +982,21 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		}
 		// Only update if there's a state transition (skip empty Clique blocks)
 		if parent := s.snap.Root(); parent != root {
-			if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
-				log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
-			}
-			// Keep 128 diff layers in the memory, persistent layer is 129th.
-			// - head layer is paired with HEAD state
-			// - head-1 layer is paired with HEAD-1 state
-			// - head-127 layer(bottom-most diff layer) is paired with HEAD-127 state
-			if err := s.snaps.Cap(root, 128); err != nil {
-				log.Warn("Failed to cap snapshot tree", "root", root, "layers", 128, "err", err)
-			}
+			//begin PluGeth code injection
+			pluginStateUpdate(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage, codeUpdates)
+			if _, ok := s.snap.(*pluginSnapshot); !ok && s.snaps != nil { // This if statement (but not its content) was added by PluGeth
+			//end PluGeth injection
+				if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
+					log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
+				}
+				// Keep 128 diff layers in the memory, persistent layer is 129th.
+				// - head layer is paired with HEAD state
+				// - head-1 layer is paired with HEAD-1 state
+				// - head-127 layer(bottom-most diff layer) is paired with HEAD-127 state
+				if err := s.snaps.Cap(root, 128); err != nil {
+					log.Warn("Failed to cap snapshot tree", "root", root, "layers", 128, "err", err)
+				}
+			}	
 		}
 		s.snap, s.snapDestructs, s.snapAccounts, s.snapStorage = nil, nil, nil, nil
 	}
