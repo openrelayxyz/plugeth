@@ -1,8 +1,6 @@
 package plugins
 
 import (
-	"github.com/openrelayxyz/plugeth-utils/core"
-
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -10,13 +8,14 @@ import (
 	"plugin"
 	"reflect"
 	"strings"
-
+	
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/openrelayxyz/plugeth-utils/core"
 	"gopkg.in/urfave/cli.v1"
 )
 
-type Subcommand func(*cli.Context, []string) error
+type Subcommand func(core.Context, []string) error
 
 type pluginDetails struct {
 	p *plugin.Plugin
@@ -93,9 +92,9 @@ func NewPluginLoader(target string) (*PluginLoader, error) {
 		}
 		sb, err := plug.Lookup("Subcommands")
 		if err == nil {
-			subcommands, ok := sb.(*map[string]func(*cli.Context, []string) error)
+			subcommands, ok := sb.(*map[string]func(core.Context, []string) error)
 			if !ok {
-				log.Warn("Could not cast plugin.Subcommands to `map[string]func(*cli.Context, []string) error`", "file", fpath, "type", reflect.TypeOf(sb))
+				log.Warn("Could not cast plugin.Subcommands to `map[string]func(core.Context, []string) error`", "file", fpath, "type", reflect.TypeOf(sb))
 			} else {
 				for k, v := range *subcommands {
 					if _, ok := pl.Subcommands[k]; ok {
@@ -110,7 +109,7 @@ func NewPluginLoader(target string) (*PluginLoader, error) {
 	return pl, nil
 }
 
-func Initialize(target string, ctx *cli.Context) (err error) {
+func Initialize(target string, ctx core.Context) (err error) {
 	DefaultPluginLoader, err = NewPluginLoader(target)
 	if err != nil {
 		return err
@@ -119,13 +118,13 @@ func Initialize(target string, ctx *cli.Context) (err error) {
 	return nil
 }
 
-func (pl *PluginLoader) Initialize(ctx *cli.Context) {
+func (pl *PluginLoader) Initialize(ctx core.Context) {
 	fns := pl.Lookup("Initialize", func(i interface{}) bool {
-		_, ok := i.(func(*cli.Context, core.PluginLoader, core.Logger))
+		_, ok := i.(func(core.Context, core.PluginLoader, core.Logger))
 		return ok
 	})
 	for _, fni := range fns {
-		if fn, ok := fni.(func(*cli.Context, core.PluginLoader, core.Logger)); ok {
+		if fn, ok := fni.(func(core.Context, core.PluginLoader, core.Logger)); ok {
 			fn(ctx, pl, log.Root())
 		}
 	}
