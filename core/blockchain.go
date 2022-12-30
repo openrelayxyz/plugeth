@@ -1393,7 +1393,8 @@ func (bc *BlockChain) writeBlockAndSetHead(block *types.Block, receipts []*types
 	} else {
 		pluginNewSideBlock(block, block.Hash(), logs)
 		bc.chainSideFeed.Send(ChainSideEvent{Block: block})
-	}       // end PluGeth code injection
+		// end PluGeth code injection
+		}   
 	return status, nil
 }
 
@@ -2089,7 +2090,7 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 		}
 		//begin PluGeth code injection
 		pluginReorg(commonBlock, oldChain, newChain)
-		//begin Plugeth code injection
+		//end PluGeth code injection
 		logFn(msg, "number", commonBlock.Number(), "hash", commonBlock.Hash(),
 			"drop", len(oldChain), "dropfrom", oldChain[0].Hash(), "add", len(newChain), "addfrom", newChain[0].Hash())
 		blockReorgAddMeter.Mark(int64(len(newChain)))
@@ -2214,14 +2215,14 @@ func (bc *BlockChain) SetCanonical(head *types.Block) (common.Hash, error) {
 	if len(logs) > 0 {
 		bc.logsFeed.Send(logs)
 	}
-	// begin plugeth code injection
+	// begin PluGeth code injection
 	ptd := bc.GetTd(head.ParentHash(), head.NumberU64()-1)
 	externTd := ptd
 	if ptd != nil {
 		externTd = new(big.Int).Add(head.Difficulty(), ptd)
 	}
 	pluginNewHead(head, head.Hash(), logs, externTd)
-	// end plugeth code injection
+	// end PluGeth code injection
 	bc.chainHeadFeed.Send(ChainHeadEvent{Block: head})
 
 	context := []interface{}{
