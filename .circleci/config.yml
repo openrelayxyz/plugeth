@@ -63,7 +63,7 @@ jobs:
       - run:
           name: "Publish Release on GitHub"
           command: |
-            go get github.com/tcnksm/ghr
+            go install github.com/tcnksm/ghr@v0.14.0
             PLUGETH_UTILS_VERSION=$(grep "github.com/openrelayxyz/plugeth-utils v" go.mod | cut -d ' ' -f 2)
             NAME=plugeth-$PLUGETH_UTILS_VERSION-${CIRCLE_TAG}
             VERSION=${CIRCLE_TAG}
