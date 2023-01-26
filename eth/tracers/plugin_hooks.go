@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/plugins/interfaces"
-	"github.com/ethereum/go-ethereum/plugins/wrappers"
+	"github.com/ethereum/go-ethereum/plugins/wrappers/statedbandtracerwrappers"
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
@@ -26,14 +26,14 @@ func GetPluginTracer(pl *plugins.PluginLoader, name string) (func(*state.StateDB
 		if tracerMap, ok := tmap.(*map[string]func(core.StateDB) core.TracerResult); ok {
 			if tracer, ok := (*tracerMap)[name]; ok {
 				return func(sdb *state.StateDB, vmctx vm.BlockContext) interfaces.TracerResult {
-					return wrappers.NewWrappedTracer(tracer(wrappers.NewWrappedStateDB(sdb)))
+					return statedbandtracerwrappers.NewWrappedTracer(tracer(wrappers.NewWrappedStateDB(sdb)))
 				}, true
 			}
 		}
 		if tracerMap, ok := tmap.(*map[string]func(core.StateDB, core.BlockContext) core.TracerResult); ok {
 			if tracer, ok := (*tracerMap)[name]; ok {
 				return func(sdb *state.StateDB, vmctx vm.BlockContext) interfaces.TracerResult {
-					return wrappers.NewWrappedTracer(tracer(wrappers.NewWrappedStateDB(sdb), core.BlockContext{
+					return statedbandtracerwrappers.NewWrappedTracer(tracer(wrappers.NewWrappedStateDB(sdb), core.BlockContext{
 						Coinbase:    core.Address(vmctx.Coinbase),
 						GasLimit:    vmctx.GasLimit,
 						BlockNumber: vmctx.BlockNumber,

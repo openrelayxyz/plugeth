@@ -174,8 +174,7 @@ func (b *Backend) BloomStatus() (uint64, uint64) {
 	return b.b.BloomStatus()
 }
 func (b *Backend) GetLogs(ctx context.Context, blockHash core.Hash) ([][]byte, error) {
-	header, _ := b.b.HeaderByHash(ctx, common.Hash(blockHash))
-	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash), uint64(header.Number.Uint64()))
+	logs, err := b.b.GetLogs(ctx, common.Hash(blockHash))
 	if err != nil {
 		return nil, err
 	}
@@ -207,50 +206,72 @@ func (p *progress) CurrentBlock() uint64 {
 func (p *progress) HighestBlock() uint64 {
 	return p.p.HighestBlock
 }
-
 func (p *progress) PulledStates() uint64 {
-	log.Warn("PulledStates is no longer supported by Geth")
-	return 0
+	return p.p.PulledStates
 }
 func (p *progress) KnownStates() uint64 {
-	log.Warn("KnownStates is no longer supported by Geth")
+	return p.p.KnownStates
+}
+
+func (p *progress) SyncedAccounts() uint64 {
+	//todo: add in when changes get merged to core-geth
+	//return p.p.SyncedAccounts
 	return 0
 }
-func (p *progress) SyncedAccounts() uint64 {
-	return p.p.SyncedAccounts
-}
 func (p *progress) SyncedAccountBytes() uint64 {
-	return p.p.SyncedAccountBytes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedAccountBytes
+	return 0
 }
 func (p *progress) SyncedBytecodes() uint64 {
-	return p.p.SyncedBytecodes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedBytecodes
+	return 0
 }
 func (p *progress) SyncedBytecodeBytes() uint64 {
-	return p.p.SyncedBytecodeBytes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedBytecodeBytes
+	return 0
 }
 func (p *progress) SyncedStorage() uint64 {
-	return p.p.SyncedStorage
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedStorage
+	return 0
 }
 func (p *progress) SyncedStorageBytes() uint64 {
-	return p.p.SyncedStorageBytes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.SyncedStorageBytes
+	return 0
 }
 func (p *progress) HealedTrienodes() uint64 {
-	return p.p.HealedTrienodes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedTrienodes
+	return 0
 }
 func (p *progress) HealedTrienodeBytes() uint64 {
-	return p.p.HealedTrienodeBytes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedTrienodeBytes
+	return 0
 }
 func (p *progress) HealedBytecodes() uint64 {
-	return p.p.HealedBytecodes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedBytecodes
+	return 0
 }
 func (p *progress) HealedBytecodeBytes() uint64 {
-	return p.p.HealedBytecodeBytes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealedBytecodeBytes
+	return 0
 }
 func (p *progress) HealingTrienodes() uint64 {
-	return p.p.HealingTrienodes
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealingTrienodes
+	return 0
 }
 func (p *progress) HealingBytecode() uint64 {
-	return p.p.HealingBytecode
+	//todo: add in when changes get merged to core-geth
+	// return p.p.HealingBytecode
+	return 0
 }
 
 func (d *dl) Progress() core.Progress {
