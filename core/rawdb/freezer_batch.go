@@ -44,11 +44,13 @@ func newFreezerBatch(f *freezer) *freezerBatch {
 
 // Append adds an RLP-encoded item of the given kind.
 func (batch *freezerBatch) Append(kind string, num uint64, item interface{}) error {
+	PluginTrackUpdate(num, kind, item)
 	return batch.tables[kind].Append(num, item)
 }
 
 // AppendRaw adds an item of the given kind.
 func (batch *freezerBatch) AppendRaw(kind string, num uint64, item []byte) error {
+	PluginTrackUpdate(num, kind, item)
 	return batch.tables[kind].AppendRaw(num, item)
 }
 
