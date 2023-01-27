@@ -1367,7 +1367,8 @@ func (bc *BlockChain) writeBlockAndSetHead(block *types.Block, receipts []*types
 		bc.writeHeadBlock(block)
 	}
 	bc.futureBlocks.Remove(block.Hash())
-
+	
+	// ptd and externTd are both PluGeth injections
 	ptd := bc.GetTd(block.ParentHash(), block.NumberU64()-1)
 	if ptd == nil {
 		return NonStatTy, consensus.ErrUnknownAncestor
