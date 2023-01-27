@@ -260,6 +260,9 @@ func (f *Freezer) ModifyAncients(fn func(operator ethdb.AncientWriteOperator) er
 	if err != nil {
 		return 0, err
 	}
+	//begin PluGeth code injection
+	pluginCommitUpdate(item)
+	//end PluGeth code injection
 	atomic.StoreUint64(&f.frozen, item)
 	return writeSize, nil
 }

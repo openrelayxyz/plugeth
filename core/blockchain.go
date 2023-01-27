@@ -1370,13 +1370,18 @@ func (bc *BlockChain) writeBlockAndSetHead(block *types.Block, receipts []*types
 	} else {
 		status = SideStatTy
 	}
+
+	// ptd and externTd are both PluGeth injections
+	ptd := bc.GetTd(block.ParentHash(), block.NumberU64()-1)
+	if ptd == nil {
+		return NonStatTy, consensus.ErrUnknownAncestor
+	}
+	externTd := new(big.Int).Add(block.Difficulty(), ptd)
+
 	// Set new head.
 	if status == CanonStatTy {
-		bc.writeHeadBlock(block)
-	}
-	bc.futureBlocks.Remove(block.Hash())
-
-	if status == CanonStatTy {
+		//begin PluGeth code injection
+		pluginNewHead(block, block.Hash(), logs, externTd)
 		bc.chainFeed.Send(ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
 		if len(logs) > 0 {
 			bc.logsFeed.Send(logs)
@@ -1390,7 +1395,9 @@ func (bc *BlockChain) writeBlockAndSetHead(block *types.Block, receipts []*types
 			bc.chainHeadFeed.Send(ChainHeadEvent{Block: block})
 		}
 	} else {
+		pluginNewSideBlock(block, block.Hash(), logs)
 		bc.chainSideFeed.Send(ChainSideEvent{Block: block})
+		// end PluGeth code injection
 	}
 	return status, nil
 }
@@ -2116,6 +2123,9 @@ func (bc *BlockChain) reorg(oldBlock, newBlock *types.Block) error {
 			msg = "Large chain reorg detected"
 			logFn = log.Warn
 		}
+		//begin PluGeth code injection
+		pluginReorg(commonBlock, oldChain, newChain)
+		//end PluGeth code injection
 		logFn(msg, "number", commonBlock.Number(), "hash", commonBlock.Hash(),
 			"drop", len(oldChain), "dropfrom", oldChain[0].Hash(), "add", len(newChain), "addfrom", newChain[0].Hash())
 		blockReorgAddMeter.Mark(int64(len(newChain)))
@@ -2240,6 +2250,14 @@ func (bc *BlockChain) SetCanonical(head *types.Block) (common.Hash, error) {
 	if len(logs) > 0 {
 		bc.logsFeed.Send(logs)
 	}
+	// begin PluGeth code injection
+	ptd := bc.GetTd(head.ParentHash(), head.NumberU64()-1)
+	externTd := ptd
+	if ptd != nil {
+		externTd = new(big.Int).Add(head.Difficulty(), ptd)
+	}
+	pluginNewHead(head, head.Hash(), logs, externTd)
+	// end PluGeth code injection
 	bc.chainHeadFeed.Send(ChainHeadEvent{Block: head})
 
 	context := []interface{}{

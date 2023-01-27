@@ -3,6 +3,7 @@ package statedbandtracerwrappers
 import (
 	"math/big"
 	"time"
+	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -101,8 +102,11 @@ func (w WrappedTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, s
 func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
 	w.r.CaptureEnd(output, gasUsed, t, err)
 }
-func (w WrappedTracer) GetResult() (interface{}, error) {
-	return w.r.Result()
+func (w WrappedTracer) GetResult() (json.RawMessage, error) {
+	data, err := w.r.Result()
+	if err != nil { return nil, err}
+	result, err := json.Marshal(data)
+	return json.RawMessage(result), err
 }
 
 func (w WrappedTracer) CaptureTxStart (gasLimit uint64) {}

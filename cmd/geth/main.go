@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"path"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -39,6 +40,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/plugins"
+	"github.com/ethereum/go-ethereum/plugins/wrappers/backendwrapper"
 
 	// Force-load the tracer engines to trigger registration
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
@@ -386,13 +389,27 @@ func prepare(ctx *cli.Context) {
 // It creates a default node based on the command line arguments and runs it in
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
-	if args := ctx.Args().Slice(); len(args) > 0 {
-		return fmt.Errorf("invalid command: %q", args[0])
+	//begin PluGeth code injection
+	if err := plugins.Initialize(path.Join(ctx.String(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
+		return err
 	}
-
 	prepare(ctx)
+	if !plugins.ParseFlags(ctx.Args().Slice()) {
+		if args := ctx.Args().Slice(); len(args) > 0 {
+			return fmt.Errorf("invalid command: %q", args[0])
+		}
+	}
 	stack, backend := makeFullNode(ctx)
+	wrapperBackend := backendwrapper.NewBackend(backend)
+	pluginsInitializeNode(stack, wrapperBackend)
+	if ok, err := plugins.RunSubcommand(ctx); ok {
+		stack.Close()
+		return err
+	}
 	defer stack.Close()
+	defer pluginsOnShutdown()
+	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
+	//end PluGeth code injection
 
 	startNode(ctx, stack, backend, false)
 	stack.Wait()
