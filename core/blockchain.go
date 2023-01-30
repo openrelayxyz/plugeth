@@ -1380,6 +1380,12 @@ func (bc *BlockChain) writeBlockAndSetHead(block *types.Block, receipts []*types
 
 	// Set new head.
 	if status == CanonStatTy {
+		bc.writeHeadBlock(block)
+	}
+	bc.futureBlocks.Remove(block.Hash())
+
+	// Set new head.
+	if status == CanonStatTy {
 		//begin PluGeth code injection
 		pluginNewHead(block, block.Hash(), logs, externTd)
 		bc.chainFeed.Send(ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
