@@ -297,3 +297,29 @@ func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
 }
+
+func AllowTrieGC(pl *plugins.PluginLoader, gcproc, limit time.Duration) bool {
+	allowList := plugins.Lookup("AllowTrieGC", func(item interface{}) bool {
+		_, ok := item.(func(time.Duration) bool)
+		return ok
+	})
+	if len(allowList) == 0 {
+		return gcproc > limit
+	}
+	for _, allowFni := range allowList {
+		if allowFn, ok := allowFni.(func(time.Duration) bool); ok {
+			if !allowFn(gcproc) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+
+func allowTrieGc(gcproc, limit time.Duration) bool {
+	if plugins.DefaultPluginLoader == nil {
+		//complain
+	}
+	return AllowTrieGC(plugins.DefaultPluginLoader, gcproc, limit)
+}
