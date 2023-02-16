@@ -167,6 +167,8 @@ type BlockChain struct {
 	snaps  *snapshot.Tree // Snapshot tree for fast trie leaf access
 	triegc *prque.Prque   // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration  // Accumulates canonical block processing for trie dumping
+	//plugeth injection
+	testVal bool
 
 	// txLookupLimit is the maximum number of blocks from head whose tx indices
 	// are reserved:
@@ -1275,9 +1277,11 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 		return err
 	}
 	triedb := bc.stateCache.TrieDB()
-
+		
 	// If we're running an archive node, always flush
-	if bc.cacheConfig.TrieDirtyDisabled {
+	// begin PluGeth injection
+	if bc.cacheConfig.TrieDirtyDisabled || pluginFlushCache(){
+	// end PluGeth injection
 		return triedb.Commit(root, false, nil)
 	} else {
 		// Full but not archive node, do proper garbage collection
@@ -1298,6 +1302,7 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 
 			// If we exceeded out time allowance, flush an entire trie to disk
 			if bc.gcproc > bc.cacheConfig.TrieTimeLimit {
+				//cardinal hook here
 				// If the header is missing (canonical chain behind), we're reorging a low
 				// diff sidechain. Suspend committing until this operation is completed.
 				header := bc.GetHeaderByNumber(chosen)

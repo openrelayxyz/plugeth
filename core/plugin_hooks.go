@@ -297,3 +297,23 @@ func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
 }
+
+func PluginFlushCache(pl *plugins.PluginLoader) bool {
+	fnList := pl.Lookup("FlushCache", func(item interface{}) bool {
+		_, ok := item.(func() bool)
+		return ok
+	})
+	for _, fni := range fnList {
+		if fn, ok := fni.(func() bool); ok {
+			return fn() 
+		}
+	}
+	return false
+}
+
+func pluginFlushCache() bool {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting FlushCache, but default PluginLoader has not been initialized")
+	}
+	return PluginFlushCache(plugins.DefaultPluginLoader)
+}
