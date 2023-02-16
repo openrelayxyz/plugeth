@@ -167,8 +167,6 @@ type BlockChain struct {
 	snaps  *snapshot.Tree // Snapshot tree for fast trie leaf access
 	triegc *prque.Prque   // Priority queue mapping block numbers to tries to gc
 	gcproc time.Duration  // Accumulates canonical block processing for trie dumping
-	//plugeth injection
-	testVal bool
 
 	// txLookupLimit is the maximum number of blocks from head whose tx indices
 	// are reserved:
