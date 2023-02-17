@@ -961,7 +961,7 @@ func (api *API) traceTx(ctx context.Context, message core.Message, txctx *Contex
 		if tr, ok := getPluginTracer(*config.Tracer); ok {
 			tracer = tr(statedb, vmctx)
 		} else {
-			tracer, err = New(*config.Tracer, txctx, config.TracerConfig)
+			tracer, err = DefaultDirectory.New(*config.Tracer, txctx, config.TracerConfig)
 			if err != nil {
 				return nil, err
 			}

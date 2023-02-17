@@ -2,7 +2,6 @@ package wrappers
 
 import (
 	"math/big"
-	"time"
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -101,8 +100,8 @@ func (w WrappedTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 func (w WrappedTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	w.r.CaptureFault(pc, core.OpCode(op), gas, cost, &WrappedScopeContext{scope}, depth, err)
 }
-func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
-	w.r.CaptureEnd(output, gasUsed, t, err)
+func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, err error) {
+	w.r.CaptureEnd(output, gasUsed, err)
 }
 func (w WrappedTracer) GetResult() (json.RawMessage, error) {
 	data, err := w.r.Result()

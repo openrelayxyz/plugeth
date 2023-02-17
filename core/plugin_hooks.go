@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"math/big"
 	"reflect"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -250,9 +249,9 @@ func (mt *metaTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, sc
 		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), depth, err)
 	}
 }
-func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
+func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, err error) {
 	for _, tracer := range mt.tracers {
-		tracer.CaptureEnd(output, gasUsed, t, err)
+		tracer.CaptureEnd(output, gasUsed, err)
 	}
 }
 

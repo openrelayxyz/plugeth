@@ -164,7 +164,7 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 	if sdb.snap == nil {
 		log.Debug("Snapshots not availble. Using plugin snapshot.")
 		sdb.snap = &pluginSnapshot{root}
-		sdb.snapDestructs = make(map[common.Hash]struct{})
+		sdb.stateObjectsDestruct = make(map[common.Address]struct{})
 		sdb.snapAccounts = make(map[common.Hash][]byte)
 		sdb.snapStorage = make(map[common.Hash]map[common.Hash][]byte)
 	}
@@ -988,7 +988,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 	// begin PluGeth injection
 	codeUpdates := make(map[common.Hash][]byte)
 	// end PluGeth injection
-	codeWriter := s.db.TrieDB().DiskDB().NewBatch()
+	codeWriter := s.db.DiskDB().NewBatch()
 	for addr := range s.stateObjectsDirty {
 		if obj := s.stateObjects[addr]; !obj.deleted {
 			// Write any contract code associated with the state object
@@ -1062,10 +1062,10 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 		// Only update if there's a state transition (skip empty Clique blocks)
 		if parent := s.snap.Root(); parent != root {
 			//begin PluGeth code injection
-			pluginStateUpdate(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage, codeUpdates)
+			pluginStateUpdate(root, parent, s.convertAccountSet(s.stateObjectsDestruct), s.snapAccounts, s.snapStorage, codeUpdates)
 			if _, ok := s.snap.(*pluginSnapshot); !ok && s.snaps != nil { // This if statement (but not its content) was added by PluGeth
 			//end PluGeth injection
-				if err := s.snaps.Update(root, parent, s.snapDestructs, s.snapAccounts, s.snapStorage); err != nil {
+				if err := s.snaps.Update(root, parent, s.convertAccountSet(s.stateObjectsDestruct), s.snapAccounts, s.snapStorage); err != nil {
 					log.Warn("Failed to update snapshot tree", "from", parent, "to", root, "err", err)
 				}
 				// Keep 128 diff layers in the memory, persistent layer is 129th.

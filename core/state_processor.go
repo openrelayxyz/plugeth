@@ -77,28 +77,39 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		cfg.Tracer = blockTracer
 		cfg.Debug = true
 	}
+	// end pluGeth code injection
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
-	// Iterate over and process the individual transactions
+	// begin PluGeth code injection
 	pluginPreProcessBlock(block)
 	blockTracer.PreProcessBlock(block)
+	// end PluGeth code injection
+	// Iterate over and process the individual transactions
 	for i, tx := range block.Transactions() {
 		msg, err := tx.AsMessage(types.MakeSigner(p.config, header.Number), header.BaseFee)
 		if err != nil {
+			// begin PluGeth injection
 			pluginBlockProcessingError(tx, block, err)
 			blockTracer.BlockProcessingError(tx, block, err)
+			// end PluGeth injection
 			return nil, nil, 0, fmt.Errorf("could not apply tx %d [%v]: %w", i, tx.Hash().Hex(), err)
 		}
-		statedb.Prepare(tx.Hash(), i)
+		statedb.SetTxContext(tx.Hash(), i)
+		// begin PluGeth injection
 		pluginPreProcessTransaction(tx, block, i)
 		blockTracer.PreProcessTransaction(tx, block, i)
-		receipt, err := applyTransaction(msg, p.config, nil, gp, statedb, blockNumber, blockHash, tx, usedGas, vmenv)
+		// end pluGeth injection
+		receipt, err := applyTransaction(msg, p.config, gp, statedb, blockNumber, blockHash, tx, usedGas, vmenv)
 		if err != nil {
+			// begin PluGeth code injection 
 			pluginBlockProcessingError(tx, block, err)
 			blockTracer.BlockProcessingError(tx, block, err)
+			// end PluGeth code injection
 			return nil, nil, 0, fmt.Errorf("could not apply tx %d [%v]: %w", i, tx.Hash().Hex(), err)
 		}
+		// begin PluGeth code injection
 		pluginPostProcessTransaction(tx, block, i, receipt)
 		blockTracer.PostProcessTransaction(tx, block, i, receipt)
+		// end PluGeth code injection
 		receipts = append(receipts, receipt)
 		allLogs = append(allLogs, receipt.Logs...)
 	}
@@ -108,10 +119,11 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		return nil, nil, 0, fmt.Errorf("withdrawals before shanghai")
 	}
 	// Finalize the block, applying any consensus engine specific extras (e.g. block rewards)
-	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles())
+	p.engine.Finalize(p.bc, header, statedb, block.Transactions(), block.Uncles(), withdrawals)
+	// begin PluGeth code injection
 	pluginPostProcessBlock(block)
 	blockTracer.PostProcessBlock(block)
-	//end PluGeth code injection
+	// end PluGeth code injection
 	return receipts, allLogs, *usedGas, nil
 }
 
