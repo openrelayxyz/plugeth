@@ -18,7 +18,6 @@ package rpc
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -64,9 +63,6 @@ func (r *serviceRegistry) registerName(name string, rcvr interface{}) error {
 		return fmt.Errorf("no service name for type %s", rcvrVal.Type().String())
 	}
 	callbacks := suitableCallbacks(rcvrVal)
-	// begin PluGeth code injection
-	pluginExtendedCallbacks(callbacks, rcvrVal)
-	// end PluGeth code injection
 	if len(callbacks) == 0 {
 		return fmt.Errorf("service %T doesn't have any suitable methods/subscriptions to expose", rcvr)
 	}
@@ -201,8 +197,8 @@ func (c *callback) call(ctx context.Context, method string, args []reflect.Value
 			const size = 64 << 10
 			buf := make([]byte, size)
 			buf = buf[:runtime.Stack(buf, false)]
-			log.Error("RPC method " + method + " crashed: " + fmt.Sprintf("%v\n%s", err, buf), "args", fullargs)
-			errRes = errors.New("method handler crashed")
+			log.Error("RPC method " + method + " crashed: " + fmt.Sprintf("%v\n%s", err, buf))
+			errRes = &internalServerError{errcodePanic, "method handler crashed"}
 		}
 	}()
 	// Run the callback.
