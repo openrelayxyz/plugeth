@@ -50,7 +50,7 @@ require (
 	github.com/mattn/go-isatty v0.0.16
 	github.com/naoina/toml v0.1.2-0.20170918210437-9fafd6967416
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/openrelayxyz/plugeth-utils v0.0.21
+	github.com/openrelayxyz/plugeth-utils v0.0.22
 	github.com/peterh/liner v1.1.1-0.20190123174540-a2c9a5303de7
 	github.com/prometheus/tsdb v0.7.1
 	github.com/rs/cors v1.7.0
