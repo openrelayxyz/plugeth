@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"reflect"
 	"time"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -303,10 +304,13 @@ func PluginSetTrieFlushIntervalClone(pl *plugins.PluginLoader, flushInterval tim
 		_, ok := item.(func(time.Duration) time.Duration)
 		return ok
 	})
+	var snc sync.Once
+	if len(fnList) > 0 {
+		snc.Do(func() {log.Warn("The blockChain flushInterval value is being accessed by multiple plugins")})
+	}
 	for _, fni := range fnList {
-		log.Error("len fn list", "len", len(fnList))
 		if fn, ok := fni.(func(time.Duration) time.Duration); ok {
-			return fn(flushInterval) 
+			flushInterval = fn(flushInterval) 
 		}
 	}
 	return flushInterval
