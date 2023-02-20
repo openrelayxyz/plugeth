@@ -1366,6 +1366,11 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 	chosen := current - TriesInMemory
 	flushInterval := time.Duration(atomic.LoadInt64(&bc.flushInterval))
 	// If we exceeded time allowance, flush an entire trie to disk
+	
+	// begin PluGeth code injection
+	flushInterval = pluginSetTrieFlushIntervalClone(flushInterval)
+	// end PluGeth code injection
+	
 	if bc.gcproc > flushInterval {
 		// If the header is missing (canonical chain behind), we're reorging a low
 		// diff sidechain. Suspend committing until this operation is completed.

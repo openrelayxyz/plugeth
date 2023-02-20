@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/big"
 	"reflect"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -295,4 +296,25 @@ func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer
 		return &metaTracer{}, false
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
+}
+
+func PluginSetTrieFlushIntervalClone(pl *plugins.PluginLoader, flushInterval time.Duration) time.Duration {
+	fnList := pl.Lookup("SetTrieFlushIntervalClone", func(item interface{}) bool{
+		_, ok := item.(func(time.Duration) time.Duration)
+		return ok
+	})
+	for _, fni := range fnList {
+		log.Error("len fn list", "len", len(fnList))
+		if fn, ok := fni.(func(time.Duration) time.Duration); ok {
+			return fn(flushInterval) 
+		}
+	}
+	return flushInterval
+}
+
+func pluginSetTrieFlushIntervalClone(flushInterval time.Duration) time.Duration {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting setTreiFlushIntervalClone, but default PluginLoader has not been initialized")
+	}
+	return PluginSetTrieFlushIntervalClone(plugins.DefaultPluginLoader, flushInterval)
 }
