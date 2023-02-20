@@ -1315,6 +1315,10 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 			// Find the next state trie we need to commit
 			chosen := current - bc.cacheConfig.TriesInMemory
 
+			// begin PluGeth code injection
+			bc.cacheConfig.TrieTimeLimit = pluginSetTrieFlushIntervalClone(bc.cacheConfig.TrieTimeLimit)
+			// end PluGeth code injection
+
 			// If we exceeded out time allowance, flush an entire trie to disk
 			if bc.gcproc > bc.cacheConfig.TrieTimeLimit {
 				// If the header is missing (canonical chain behind), we're reorging a low
