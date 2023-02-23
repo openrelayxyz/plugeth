@@ -319,6 +319,7 @@ func PluginSetTrieFlushIntervalClone(pl *plugins.PluginLoader, flushInterval tim
 func pluginSetTrieFlushIntervalClone(flushInterval time.Duration) time.Duration {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting setTreiFlushIntervalClone, but default PluginLoader has not been initialized")
+		return flushInterval
 	}
 	return PluginSetTrieFlushIntervalClone(plugins.DefaultPluginLoader, flushInterval)
 }
