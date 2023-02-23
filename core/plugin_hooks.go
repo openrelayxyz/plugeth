@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"math/big"
 	"reflect"
-	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -250,9 +249,10 @@ func (mt *metaTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, sc
 		tracer.CaptureFault(pc, core.OpCode(op), gas, cost, wrappers.NewWrappedScopeContext(scope), depth, err)
 	}
 }
-func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
+// passing zero as a dummy value is foundation PluGeth only, it is being done to preserve compatability with other networks
+func (mt *metaTracer) CaptureEnd(output []byte, gasUsed uint64, err error) {
 	for _, tracer := range mt.tracers {
-		tracer.CaptureEnd(output, gasUsed, t, err)
+		tracer.CaptureEnd(output, gasUsed, 0, err)
 	}
 }
 

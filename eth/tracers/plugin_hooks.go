@@ -2,6 +2,7 @@ package tracers
 
 import (
 	"reflect"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -37,7 +38,8 @@ func GetPluginTracer(pl *plugins.PluginLoader, name string) (func(*state.StateDB
 						Coinbase:    core.Address(vmctx.Coinbase),
 						GasLimit:    vmctx.GasLimit,
 						BlockNumber: vmctx.BlockNumber,
-						Time:        vmctx.Time,
+						// casting int64 zero as bigInt is foundation PluGeth only, it is being done to preserve compatability with other networks
+						Time:        new(big.Int).SetInt64(int64(vmctx.Time)),
 						Difficulty:  vmctx.Difficulty,
 						BaseFee:     vmctx.BaseFee,
 					}))

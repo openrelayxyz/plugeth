@@ -2,7 +2,6 @@ package wrappers
 
 import (
 	"math/big"
-	"time"
 	"encoding/json"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -101,8 +100,9 @@ func (w WrappedTracer) CaptureExit(output []byte, gasUsed uint64, err error) {
 func (w WrappedTracer) CaptureFault(pc uint64, op vm.OpCode, gas, cost uint64, scope *vm.ScopeContext, depth int, err error) {
 	w.r.CaptureFault(pc, core.OpCode(op), gas, cost, &WrappedScopeContext{scope}, depth, err)
 }
-func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, t time.Duration, err error) {
-	w.r.CaptureEnd(output, gasUsed, t, err)
+// passing zero as a dummy value is foundation PluGeth only, it is being done to preserve compatability with other networks
+func (w WrappedTracer) CaptureEnd(output []byte, gasUsed uint64, err error) {
+	w.r.CaptureEnd(output, gasUsed, 0, err)
 }
 func (w WrappedTracer) GetResult() (json.RawMessage, error) {
 	data, err := w.r.Result()
@@ -231,30 +231,30 @@ func (n *Node) Close() error {
 	return n.n.Close()
 }
 
-// type WrappedBlockContext struct {
-// 	b vm.BlockContext
-// }
-//
-// //type WrappedBlockContext vm.BlockContext
-//
-// func NewWrappedBlockContext(c vm.BlockContext) *WrappedBlockContext {
-// 	return &WrappedBlockContext{c}
-// }
-// func (w *WrappedBlockContext) Coinbase() core.Address {
-// 	return core.Address(w.b.Coinbase)
-// }
-// func (w *WrappedBlockContext) GasLimit() uint64 {
-// 	return w.b.GasLimit
-// }
-// func (w *WrappedBlockContext) BlockNumber() *big.Int {
-// 	return w.b.BlockNumber
-// }
-// func (w *WrappedBlockContext) Time() *big.Int {
-// 	return w.b.Time
-// }
-// func (w *WrappedBlockContext) Difficulty() *big.Int {
-// 	return w.b.Difficulty
-// }
-// func (w *WrappedBlockContext) BaseFee() *big.Int {
-// 	return w.b.BaseFee
-// }
+type WrappedBlockContext struct {
+	b vm.BlockContext
+}
+
+// type WrappedBlockContext vm.BlockContext
+
+func NewWrappedBlockContext(c vm.BlockContext) *WrappedBlockContext {
+	return &WrappedBlockContext{c}
+}
+func (w *WrappedBlockContext) Coinbase() core.Address {
+	return core.Address(w.b.Coinbase)
+}
+func (w *WrappedBlockContext) GasLimit() uint64 {
+	return w.b.GasLimit
+}
+func (w *WrappedBlockContext) BlockNumber() *big.Int {
+	return w.b.BlockNumber
+}
+func (w *WrappedBlockContext) Time() *big.Int {
+	return new(big.Int).SetInt64(int64(w.b.Time))
+}
+func (w *WrappedBlockContext) Difficulty() *big.Int {
+	return w.b.Difficulty
+}
+func (w *WrappedBlockContext) BaseFee() *big.Int {
+	return w.b.BaseFee
+}
