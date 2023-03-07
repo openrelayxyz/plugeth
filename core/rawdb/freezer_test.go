@@ -26,11 +26,17 @@ import (
 	"path"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/stretchr/testify/require"
 )
+
+// seeding random below, as well as the time import are PluGeth injections to enable this test to pass as it fails in geth v1.11.1
+func init() {
+	rand.Seed(time.Now().Unix())
+}
 
 var freezerTestTableDef = map[string]bool{"test": true}
 
