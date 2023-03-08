@@ -637,6 +637,11 @@ func (db *Database) Commit(node common.Hash, report bool) error {
 	// outside code doesn't see an inconsistent state (referenced data removed from
 	// memory cache during commit but not yet in persistent storage). This is ensured
 	// by only uncaching existing data when the database write finalizes.
+
+	// begin PluGeth injection
+	pluginPreTrieCommit(node)
+	// end PluGeth injection
+
 	start := time.Now()
 	batch := db.diskdb.NewBatch()
 
@@ -682,6 +687,10 @@ func (db *Database) Commit(node common.Hash, report bool) error {
 	// Reset the garbage collection statistics
 	db.gcnodes, db.gcsize, db.gctime = 0, 0, 0
 	db.flushnodes, db.flushsize, db.flushtime = 0, 0, 0
+
+	// begin PluGeth injection
+	pluginPostTrieCommit(node)
+	// end PluGeth injection
 
 	return nil
 }

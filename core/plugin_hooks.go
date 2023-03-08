@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"math/big"
 	"reflect"
+	"time"
+	"sync"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -296,4 +298,29 @@ func pluginGetBlockTracer(hash common.Hash, statedb *state.StateDB) (*metaTracer
 		return &metaTracer{}, false
 	}
 	return PluginGetBlockTracer(plugins.DefaultPluginLoader, hash, statedb)
+}
+
+func PluginSetTrieFlushIntervalClone(pl *plugins.PluginLoader, flushInterval time.Duration) time.Duration {
+	fnList := pl.Lookup("SetTrieFlushIntervalClone", func(item interface{}) bool{
+		_, ok := item.(func(time.Duration) time.Duration)
+		return ok
+	})
+	var snc sync.Once
+	if len(fnList) > 1 {
+		snc.Do(func() {log.Warn("The blockChain flushInterval value is being accessed by multiple plugins")})
+	}
+	for _, fni := range fnList {
+		if fn, ok := fni.(func(time.Duration) time.Duration); ok {
+			flushInterval = fn(flushInterval) 
+		}
+	}
+	return flushInterval
+}
+
+func pluginSetTrieFlushIntervalClone(flushInterval time.Duration) time.Duration {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting setTreiFlushIntervalClone, but default PluginLoader has not been initialized")
+		return flushInterval
+	}
+	return PluginSetTrieFlushIntervalClone(plugins.DefaultPluginLoader, flushInterval)
 }
