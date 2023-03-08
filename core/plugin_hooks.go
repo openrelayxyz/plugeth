@@ -306,7 +306,7 @@ func PluginSetTrieFlushIntervalClone(pl *plugins.PluginLoader, flushInterval tim
 		return ok
 	})
 	var snc sync.Once
-	if len(fnList) > 0 {
+	if len(fnList) > 1 {
 		snc.Do(func() {log.Warn("The blockChain flushInterval value is being accessed by multiple plugins")})
 	}
 	for _, fni := range fnList {
