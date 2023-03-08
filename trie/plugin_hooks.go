@@ -3,6 +3,7 @@ package trie
 import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 func PluginPreTrieCommit(pl *plugins.PluginLoader, node common.Hash) {
