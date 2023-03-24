@@ -17,8 +17,6 @@ import (
 	ptypes "github.com/openrelayxyz/plugeth-utils/restricted/types"
 	pconsensus "github.com/openrelayxyz/plugeth-utils/restricted/consensus"
 	pparams "github.com/openrelayxyz/plugeth-utils/restricted/params"
-
-	philip "github.com/philip-morlier/butttruck"
 )
 
 
@@ -212,7 +210,7 @@ func gethToUtilsBlockChan(ch chan<- *types.Block) chan<- *ptypes.Block {
 		for block := range pchan {
 			ch <- utilsToGethBlock(block)
 		}
-		close(ch)
+		// close(ch)
 	}()
 	return pchan
 }
@@ -404,9 +402,15 @@ type engineWrapper struct {
 	engine pconsensus.Engine
 }
 
-func (ew *engineWrapper) Author(header *types.Header) (core.Address, error) {
+func NewWrappedEngine(e pconsensus.Engine) consensus.Engine {
+	return &engineWrapper {
+		engine: e,
+	}
+}
+
+func (ew *engineWrapper) Author(header *types.Header) (common.Address, error) {
 	addr, err := ew.engine.Author(gethToUtilsHeader(header))
-	return core.Address(addr), err
+	return common.Address(addr), err
 }
 func (ew *engineWrapper) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header, seal bool) error {
 	return ew.engine.VerifyHeader(&WrappedHeaderReader{chain, nil}, gethToUtilsHeader(header), seal)
@@ -422,7 +426,14 @@ func (ew *engineWrapper) VerifyUncles(chain consensus.ChainReader, block *types.
 	return ew.engine.VerifyUncles(&WrappedChainReader{chain, nil}, gethToUtilsBlock(block))
 }
 func (ew *engineWrapper) Prepare(chain consensus.ChainHeaderReader, header *types.Header) error {
-	return ew.engine.Prepare(&WrappedHeaderReader{chain, nil}, gethToUtilsHeader(header))
+	uHeader := gethToUtilsHeader(header)
+	if err := ew.engine.Prepare(&WrappedHeaderReader{chain, nil}, uHeader); err != nil {
+		return err
+	}
+	// header.Difficulty = uHeader.Difficulty
+	*header = *utilsToGethHeader(uHeader)
+	log.Error("header logs", "header D", header.Difficulty, "U head D", uHeader.Difficulty)
+	return nil
 }
 func (ew *engineWrapper) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, withdrawals []*types.Withdrawal) {
 	ew.engine.Finalize(&WrappedHeaderReader{chain, nil}, gethToUtilsHeader(header), wrappers.NewWrappedStateDB(state), gethToUtilsTransactions(txs), gethToUtilsHeaders(uncles), gethToUtilsWithdrawals(withdrawals))

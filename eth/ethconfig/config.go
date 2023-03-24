@@ -213,6 +213,7 @@ type Config struct {
 func CreateConsensusEngine(stack *node.Node, ethashConfig *ethash.Config, cliqueConfig *params.CliqueConfig, notify []string, noverify bool, db ethdb.Database) consensus.Engine {
 	// If proof-of-authority is requested, set it up
 	if engine := pluginGetEngine(stack, notify, noverify, db); engine != nil {
+		log.Error("returning plugin consensus engine")
 		return engine
 	}
 	var engine consensus.Engine
