@@ -357,6 +357,7 @@ func geth(ctx *cli.Context) error {
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 	//end PluGeth code injection
 	startNode(ctx, stack, backend, false)
+	pluginHookTester()
 	stack.Wait()
 	return nil
 }

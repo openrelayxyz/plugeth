@@ -98,6 +98,7 @@ func PluginPostProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
 		_, ok := item.(func(core.Hash))
 		return ok
 	})
+	log.Error("inside post pppp()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))")
 	for _, fni := range fnList {
 		if fn, ok := fni.(func(core.Hash)); ok {
 			fn(core.Hash(block.Hash()))
@@ -116,6 +117,7 @@ func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Has
 		_, ok := item.(func([]byte, core.Hash, [][]byte, *big.Int))
 		return ok
 	})
+	log.Error("inside of pluginNewHead()", "len fnList", len(fnList))
 	blockBytes, _ := rlp.EncodeToBytes(block)
 	logBytes := make([][]byte, len(logs))
 	for i, l := range logs {
