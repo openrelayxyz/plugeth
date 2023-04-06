@@ -432,7 +432,6 @@ func (ew *engineWrapper) Prepare(chain consensus.ChainHeaderReader, header *type
 	}
 	// header.Difficulty = uHeader.Difficulty
 	*header = *utilsToGethHeader(uHeader)
-	log.Error("header logs", "header D", header.Difficulty, "U head D", uHeader.Difficulty)
 	return nil
 }
 func (ew *engineWrapper) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header, withdrawals []*types.Withdrawal) {
