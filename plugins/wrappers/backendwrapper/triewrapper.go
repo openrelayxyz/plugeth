@@ -1,6 +1,8 @@
 package backendwrapper
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -26,12 +28,13 @@ func (t WrappedTrie) TryGet(key []byte) ([]byte, error) {
 	return t.t.TryGet(key)
 }
 
-func (t WrappedTrie) TryGetAccount(address common.Address) (*core.StateAccount, error) {
-	act, err := t.t.TryGetAccount(address)
+func (t WrappedTrie) TryGetAccount(address core.Address) (*WrappedStateAccount, error) {
+	act, err := t.t.TryGetAccount(common.Address(address))
 	if err != nil {
 		return nil, err
 	}
 	return NewWrappedStateAccount(act), nil
+	// return act, nil
 }
 
 func (t WrappedTrie) TryUpdate(key, value []byte) error {
@@ -56,7 +59,7 @@ func (t WrappedTrie) Hash() core.Hash {
 
 func (t WrappedTrie) Commit(collectLeaf bool) (core.Hash, *trie.NodeSet) {
 	//EmptyRootHash
-	return core.Hash(core.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421")), nil
+	return core.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"), nil
 }
 
 func (t WrappedTrie) NodeIterator(startKey []byte) core.NodeIterator {
@@ -75,6 +78,21 @@ func NewWrappedStateAccount(s *types.StateAccount) *WrappedStateAccount {
 	return &WrappedStateAccount{s}
 }
 
+func (w *WrappedStateAccount) Nonce() uint64 {
+	return w.s.Nonce
+}
+
+func (w *WrappedStateAccount) Balance() *big.Int {
+	return w.s.Balance
+}
+
+func (w *WrappedStateAccount) Root() core.Hash {
+	return core.Hash(w.s.Root)
+}
+
+func (w *WrappedStateAccount) CodeHash() []byte {
+	return w.s.CodeHash
+}
 // 	Nonce    uint64
 // 	Balance  *big.Int
 // 	Root     Hash // merkle root of the storage trie
@@ -82,11 +100,11 @@ func NewWrappedStateAccount(s *types.StateAccount) *WrappedStateAccount {
 // }
 
 type WrappedNodeIterator struct {
-	n trie.NodeInterator
+	n trie.NodeIterator
 }
 
 func (n WrappedNodeIterator) Next(b bool) bool {
-	return n.n.Next()
+	return n.n.Next(b)
 }
 
 func (n WrappedNodeIterator) Error() error {
@@ -125,7 +143,16 @@ func (n WrappedNodeIterator) LeafProof() [][]byte {
 	return n.n.LeafProof()
 }
 
-func (n WrappedNodeIterator) AddResolver(trie.NodeResolver) {
-	return n.n.AddResolver()
+func (n WrappedNodeIterator) AddResolver(c core.NodeResolver) {
+	// nr := NewWrappedNodeResolver(trie.NodeResolver)
+	return n.n.AddResolver(c)
+}
+
+type WrappedNodeResolver struct {
+	r core.NodeResolver
+}
+
+func NewWrappedNodeResolver(r trie.NodeResolver) WrappedNodeResolver {
+	return WrappedNodeResolver{r}
 }
 
