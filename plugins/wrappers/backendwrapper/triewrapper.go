@@ -1,13 +1,9 @@
 package backendwrapper
 
 import (
-	"math/big"
-
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/trie"
-	"github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
@@ -16,88 +12,42 @@ type WrappedTrie struct {
 	t state.Trie
 }
 
-func NewWrappedTrie(t state.Trie) WrappedTrie {
-	return WrappedTrie{t}
+func NewWrappedTrie(t state.Trie) core.Trie {
+	return &WrappedTrie{t}
 }
 
-func (t WrappedTrie) GetKey(b []byte) []byte {
+func (t *WrappedTrie) GetKey(b []byte) []byte {
 	return t.t.GetKey(b)
 }
-
-func (t WrappedTrie) TryGet(key []byte) ([]byte, error) {
+func (t *WrappedTrie) TryGet(key []byte) ([]byte, error) {
 	return t.t.TryGet(key)
 }
 
-func (t WrappedTrie) TryGetAccount(address core.Address) (*WrappedStateAccount, error) {
+func (t *WrappedTrie) TryGetAccount(address core.Address) (*core.StateAccount, error) {
 	act, err := t.t.TryGetAccount(common.Address(address))
 	if err != nil {
 		return nil, err
 	}
-	return NewWrappedStateAccount(act), nil
-	// return act, nil
+	return &core.StateAccount{
+		Nonce: act.Nonce,
+		Balance: act.Balance,
+		Root: core.Hash(act.Root),
+		CodeHash: act.CodeHash,
+	}, nil
 }
 
-func (t WrappedTrie) TryUpdate(key, value []byte) error {
-	return nil
-}
-
-func (t WrappedTrie) TryUpdateAccount(address core.Address, account *core.StateAccount) error {
-	return nil
-}
-
-func (t WrappedTrie) TryDelete(key []byte) error {
-	return nil
-}
-
-func (t WrappedTrie) TryDeleteAccount(address common.Address) error {
-	return nil
-}
-
-func (t WrappedTrie) Hash() core.Hash {
+func (t *WrappedTrie) Hash() core.Hash {
 	return core.Hash(t.t.Hash())
 }
 
-func (t WrappedTrie) Commit(collectLeaf bool) (core.Hash, *trie.NodeSet) {
-	//EmptyRootHash
-	return core.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"), nil
+func (t *WrappedTrie) NodeIterator(startKey []byte) core.NodeIterator {
+	itr := t.t.NodeIterator(startKey)
+	return &WrappedNodeIterator{itr}
 }
 
-func (t WrappedTrie) NodeIterator(startKey []byte) core.NodeIterator {
-	return t.t.NodeIterator(startKey)
-}
-
-func (t WrappedTrie) Prove(key []byte, fromLevel uint, proofDb ethdb.KeyValueWriter) error {
+func (t *WrappedTrie) Prove(key []byte, fromLevel uint, proofDb core.KeyValueWriter) error {
 	return nil
 }
-
-type WrappedStateAccount struct {
-	s *types.StateAccount
-}
-
-func NewWrappedStateAccount(s *types.StateAccount) *WrappedStateAccount {
-	return &WrappedStateAccount{s}
-}
-
-func (w *WrappedStateAccount) Nonce() uint64 {
-	return w.s.Nonce
-}
-
-func (w *WrappedStateAccount) Balance() *big.Int {
-	return w.s.Balance
-}
-
-func (w *WrappedStateAccount) Root() core.Hash {
-	return core.Hash(w.s.Root)
-}
-
-func (w *WrappedStateAccount) CodeHash() []byte {
-	return w.s.CodeHash
-}
-// 	Nonce    uint64
-// 	Balance  *big.Int
-// 	Root     Hash // merkle root of the storage trie
-// 	CodeHash []byte
-// }
 
 type WrappedNodeIterator struct {
 	n trie.NodeIterator
@@ -144,15 +94,11 @@ func (n WrappedNodeIterator) LeafProof() [][]byte {
 }
 
 func (n WrappedNodeIterator) AddResolver(c core.NodeResolver) {
-	// nr := NewWrappedNodeResolver(trie.NodeResolver)
-	return n.n.AddResolver(c)
+	n.n.AddResolver(WrappedNodeResolver(c))
 }
 
-type WrappedNodeResolver struct {
-	r core.NodeResolver
+func WrappedNodeResolver(fn core.NodeResolver) trie.NodeResolver {
+	return func(owner common.Hash, path []byte, hash common.Hash) []byte {
+		return fn(core.Hash(owner), path, core.Hash(hash) )
+	}
 }
-
-func NewWrappedNodeResolver(r trie.NodeResolver) WrappedNodeResolver {
-	return WrappedNodeResolver{r}
-}
-
