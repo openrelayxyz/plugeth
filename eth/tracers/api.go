@@ -957,14 +957,17 @@ func (api *API) traceTx(ctx context.Context, message *core.Message, txctx *Conte
 	if config == nil {
 		config = &TraceConfig{}
 	}
+	log.Error("outside of geth condition", "config", config.Tracer)
 	// Default tracer is the struct logger
 	tracer = logger.NewStructLogger(config.Config)
 	if config.Tracer != nil {
 		// Get the tracer from the plugin loader
 		//begin PluGeth code injection
 		if tr, ok := getPluginTracer(*config.Tracer); ok {
+			log.Error("inside geth", "tracer config", *config.Tracer)
 			tracer = tr(statedb, vmctx)
 		} else {
+			log.Error("default geth condition", "config", config.Tracer)
 			tracer, err = DefaultDirectory.New(*config.Tracer, txctx, config.TracerConfig)
 			if err != nil {
 				return nil, err
