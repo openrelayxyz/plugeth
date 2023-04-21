@@ -272,7 +272,8 @@ func (f *Freezer) ModifyAncients(fn func(ethdb.AncientWriteOp) error) (writeSize
 	//begin PluGeth code injection
 	pluginCommitUpdate(item)
 	//end PluGeth code injection
-	atomic.StoreUint64(&f.frozen, item)
+	// atomic.StoreUint64(*f.frozen, item)
+	f.frozen.Store(item)
 	return writeSize, nil
 }
 
