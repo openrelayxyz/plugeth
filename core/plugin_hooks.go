@@ -98,7 +98,6 @@ func PluginPostProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
 		_, ok := item.(func(core.Hash))
 		return ok
 	})
-	log.Error("inside post pppp()))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))")
 	for _, fni := range fnList {
 		if fn, ok := fni.(func(core.Hash)); ok {
 			fn(core.Hash(block.Hash()))
