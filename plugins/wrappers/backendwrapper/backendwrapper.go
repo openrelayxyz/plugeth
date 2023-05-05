@@ -11,10 +11,12 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	gcore "github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/trie"
 
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -460,3 +462,32 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 	}
 	return b.chainConfig
 }
+
+func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
+	tr, err := trie.NewStateTrie(trie.TrieID(common.Hash(h)), trie.NewDatabase(b.b.ChainDb()))
+	if err != nil {
+		return nil, err
+	}
+	return NewWrappedTrie(tr), nil
+}
+
+func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (core.Trie, error) {
+	tr, err := b.GetTrie(stateRoot)
+	if err != nil {
+		return nil, err
+	}
+	act, err := tr.GetAccount(account)
+	if err != nil {
+		return nil, err
+	}
+	acTr, err := trie.NewStateTrie(trie.StorageTrieID(common.Hash(stateRoot), crypto.Keccak256Hash(account[:]), common.Hash(act.Root)), trie.NewDatabase(b.b.ChainDb()))
+	if err != nil {
+		return nil, err
+	}
+	return NewWrappedTrie(acTr), nil
+}
+
+
+
+
+
