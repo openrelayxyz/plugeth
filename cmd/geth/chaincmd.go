@@ -255,6 +255,7 @@ func importChain(ctx *cli.Context) error {
 	if err := plugins.Initialize(path.Join(ctx.String(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
 		return err
 	}
+	log.Info("Import chain arguments", "args", ctx.Args().Slice())
 	plugins.ParseFlags(ctx.Args().Slice())
 	// end PluGeth code injection
 
@@ -267,9 +268,7 @@ func importChain(ctx *cli.Context) error {
 	go metrics.CollectProcessMetrics(3 * time.Second)
 
 	// begin PluGeth code injection
-	log.Info("pre make full node")
 	stack, backend := makeFullNode(ctx)
-	log.Info("post make full node")
 	wrapperBackend := backendwrapper.NewBackend(backend)
 	pluginsInitializeNode(stack, wrapperBackend)
 	defer stack.Close()
