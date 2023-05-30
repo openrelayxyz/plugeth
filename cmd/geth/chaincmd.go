@@ -256,7 +256,15 @@ func importChain(ctx *cli.Context) error {
 		return err
 	}
 	log.Info("Import chain arguments", "args", ctx.Args().Slice())
-	plugins.ParseFlags(ctx.Args().Slice())
+	flags := ctx.Args().Slice()
+	idx := 0
+	for i, v := range flags {
+		if v == "--" {
+			idx = i
+			break
+		}
+	}
+	plugins.ParseFlags(flags[idx+1:])
 	// end PluGeth code injection
 
 	if ctx.Args().Len() < 1 {
