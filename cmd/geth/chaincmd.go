@@ -266,7 +266,9 @@ func importChain(ctx *cli.Context) error {
 	go metrics.CollectProcessMetrics(3 * time.Second)
 
 	// begin PluGeth code injection
+	log.Info("pre make full node")
 	stack, backend := makeFullNode(ctx)
+	log.Info("post make full node")
 	wrapperBackend := backendwrapper.NewBackend(backend)
 	pluginsInitializeNode(stack, wrapperBackend)
 	// end PluGeth code injection
