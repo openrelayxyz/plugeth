@@ -37,6 +37,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/eth"
 	"github.com/ethereum/go-ethereum/internal/flags"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
@@ -271,13 +272,14 @@ func importChain(ctx *cli.Context) error {
 	log.Info("post make full node")
 	wrapperBackend := backendwrapper.NewBackend(backend)
 	pluginsInitializeNode(stack, wrapperBackend)
-	// end PluGeth code injection
 	defer stack.Close()
 
-	chain, db := utils.MakeChain(ctx, stack, false)
-	defer db.Close()
+	chain := backend.(*eth.EthAPIBackend).BlockChain()
+	db := backend.ChainDb()
 
-	// begin PluGeth code injection
+	// chain, db := utils.MakeChain(ctx, stack, false)
+	// defer db.Close()
+
 	defer pluginsOnShutdown()
 	// end PluGeth code injection
 
