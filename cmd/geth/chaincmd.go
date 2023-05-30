@@ -21,11 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
-
+	
 	"github.com/ethereum/go-ethereum/cmd/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -39,6 +41,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/plugins"
+	"github.com/ethereum/go-ethereum/plugins/wrappers/backendwrapper"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/urfave/cli/v2"
 )
@@ -246,6 +250,13 @@ func dumpGenesis(ctx *cli.Context) error {
 }
 
 func importChain(ctx *cli.Context) error {
+	//begin PluGeth code injection
+	if err := plugins.Initialize(path.Join(ctx.String(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
+		return err
+	}
+	plugins.ParseFlags(ctx.Args().Slice())
+	// end PluGeth code injection
+
 	if ctx.Args().Len() < 1 {
 		utils.Fatalf("This command requires an argument.")
 	}
@@ -254,11 +265,19 @@ func importChain(ctx *cli.Context) error {
 	// Start system runtime metrics collection
 	go metrics.CollectProcessMetrics(3 * time.Second)
 
-	stack, _ := makeConfigNode(ctx)
+	// begin PluGeth code injection
+	stack, backend := makeFullNode(ctx)
+	wrapperBackend := backendwrapper.NewBackend(backend)
+	pluginsInitializeNode(stack, wrapperBackend)
+	// end PluGeth code injection
 	defer stack.Close()
 
 	chain, db := utils.MakeChain(ctx, stack, false)
 	defer db.Close()
+
+	// begin PluGeth code injection
+	defer pluginsOnShutdown()
+	// end PluGeth code injection
 
 	// Start periodically gathering memory profiles
 	var peakMemAlloc, peakMemSys uint64
@@ -287,6 +306,9 @@ func importChain(ctx *cli.Context) error {
 		}
 	} else {
 		for _, arg := range ctx.Args().Slice() {
+			// begin PluGeth code injection
+			if strings.HasPrefix(arg, "--") { continue }
+			// end PluGeth code injection
 			if err := utils.ImportChain(chain, arg); err != nil {
 				importErr = err
 				log.Error("Import error", "file", arg, "err", err)
