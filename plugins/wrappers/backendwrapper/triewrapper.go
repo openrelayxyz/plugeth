@@ -19,12 +19,12 @@ func NewWrappedTrie(t state.Trie) core.Trie {
 func (t *WrappedTrie) GetKey(b []byte) []byte {
 	return t.t.GetKey(b)
 }
-func (t *WrappedTrie) TryGet(key []byte) ([]byte, error) {
-	return t.t.TryGet(key)
-}
+// func (t *WrappedTrie) TryGet(key []byte) ([]byte, error) {
+// 	return t.t.TryGet(key)
+// }
 
-func (t *WrappedTrie) TryGetAccount(address core.Address) (*core.StateAccount, error) {
-	act, err := t.t.TryGetAccount(common.Address(address))
+func (t *WrappedTrie) GetAccount(address core.Address) (*core.StateAccount, error) {
+	act, err := t.t.GetAccount(common.Address(address))
 	if err != nil {
 		return nil, err
 	}

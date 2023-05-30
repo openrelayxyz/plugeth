@@ -476,7 +476,7 @@ func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (cor
 	if err != nil {
 		return nil, err
 	}
-	act, err := tr.TryGetAccount(account)
+	act, err := tr.GetAccount(account)
 	if err != nil {
 		return nil, err
 	}
