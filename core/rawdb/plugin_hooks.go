@@ -11,9 +11,16 @@ import (
 var (
 	freezerUpdates map[uint64]map[string]interface{}
 	lock sync.Mutex
+	injectionCalled *bool
 )
 
 func PluginTrackUpdate(num uint64, kind string, value interface{}) {
+
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called 
+	} 
+
 	lock.Lock()
 	defer lock.Unlock()
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
@@ -26,6 +33,12 @@ func PluginTrackUpdate(num uint64, kind string, value interface{}) {
 }
 
 func pluginCommitUpdate(num uint64) {
+	
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called 
+	} 
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting CommitUpdate, but default PluginLoader has not been initialized")
 		return

@@ -46,6 +46,9 @@ func newFreezerBatch(f *Freezer) *freezerBatch {
 func (batch *freezerBatch) Append(kind string, num uint64, item interface{}) error {
 	// begin PluGeth injection
 	PluginTrackUpdate(num, kind, item)
+	if injectionCalled != nil {
+		return nil
+	}
 	// end PluGeth injection
 	return batch.tables[kind].Append(num, item)
 }
@@ -54,6 +57,9 @@ func (batch *freezerBatch) Append(kind string, num uint64, item interface{}) err
 func (batch *freezerBatch) AppendRaw(kind string, num uint64, item []byte) error {
 	// being PluGeth injection
 	PluginTrackUpdate(num, kind, item)
+	if injectionCalled != nil {
+		return nil
+	}
 	// end PluGeth injection
 	return batch.tables[kind].AppendRaw(num, item)
 }
