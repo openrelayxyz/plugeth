@@ -18,6 +18,8 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
+var injectionCalled *bool
+
 func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
 	fnList := pl.Lookup("PreProcessBlock", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, uint64, []byte))
@@ -68,6 +70,12 @@ func PluginBlockProcessingError(pl *plugins.PluginLoader, tx *types.Transaction,
 	}
 }
 func pluginBlockProcessingError(tx *types.Transaction, block *types.Block, err error) {
+
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called
+	}
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting BlockProcessingError, but default PluginLoader has not been initialized")
 		return
