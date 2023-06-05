@@ -1,6 +1,7 @@
 package core
 
 import (
+	// "reflect"
 	"fmt"
 	"testing"
 	"math/big"
@@ -61,7 +62,7 @@ var (
 )
 
 
-func TestBlockProcessingInjections(t *testing.T) {
+func TestPlugethInjections(t *testing.T) {
 
 	
 	blockchain, _ := NewBlockChain(db, nil, gspec, nil, ethash.NewFaker(), vm.Config{}, nil, nil)
@@ -89,5 +90,23 @@ func TestBlockProcessingInjections(t *testing.T) {
 		}
 	})
 
-	
-}
+	t.Run(fmt.Sprintf("test Reorg"), func(t *testing.T) {
+		called := false
+		injectionCalled = &called
+
+		// the transaction has to be initialized with a different gas price than the previous tx in order to trigger a reorg
+		txns2 := []*types.Transaction{
+			makeTx(key1, 0, common.Address{}, big.NewInt(1000), params.TxGas-1000, big.NewInt(875000001), nil),
+		}
+		block2 := GenerateBadBlock(gspec.ToBlock(), engine, txns2, gspec.Config)
+
+
+		_, _ = blockchain.writeBlockAndSetHead(block, []*types.Receipt{}, []*types.Log{}, statedb, false)
+
+		_ = blockchain.reorg(block.Header(), block2)
+		
+		if *injectionCalled != true {
+			t.Fatalf("pluginReorg injection in blockChain.Reorg() not called")
+		}
+	})
+}	

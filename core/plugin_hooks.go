@@ -169,6 +169,7 @@ func pluginNewSideBlock(block *types.Block, hash common.Hash, logs []*types.Log)
 }
 
 func PluginReorg(pl *plugins.PluginLoader, commonBlock *types.Block, oldChain, newChain types.Blocks) {
+
 	fnList := pl.Lookup("Reorg", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, []core.Hash, []core.Hash))
 		return ok
@@ -188,6 +189,12 @@ func PluginReorg(pl *plugins.PluginLoader, commonBlock *types.Block, oldChain, n
 	}
 }
 func pluginReorg(commonBlock *types.Block, oldChain, newChain types.Blocks) {
+
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called
+	}
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting Reorg, but default PluginLoader has not been initialized")
 		return
