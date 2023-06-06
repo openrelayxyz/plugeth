@@ -2,6 +2,8 @@ package core
 
 import (
 	// "reflect"
+	// "sync/atomic"
+	"hash"
 	"fmt"
 	"testing"
 	"math/big"
@@ -16,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
+	"golang.org/x/crypto/sha3"
 )
 
 var (
@@ -60,6 +63,27 @@ var (
 		},
 	}
 )
+
+type testHasher struct {
+	hasher hash.Hash
+}
+
+func newHasher() *testHasher {
+	return &testHasher{hasher: sha3.NewLegacyKeccak256()}
+}
+
+func (h *testHasher) Reset() {
+	h.hasher.Reset()
+}
+
+func (h *testHasher) Update(key, val []byte) {
+	h.hasher.Write(key)
+	h.hasher.Write(val)
+}
+
+func (h *testHasher) Hash() common.Hash {
+	return common.BytesToHash(h.hasher.Sum(nil))
+}
 
 
 func TestPlugethInjections(t *testing.T) {
@@ -107,6 +131,17 @@ func TestPlugethInjections(t *testing.T) {
 		
 		if *injectionCalled != true {
 			t.Fatalf("pluginReorg injection in blockChain.Reorg() not called")
+		}
+	})
+
+	t.Run(fmt.Sprintf("test NewSideBlock"), func(t *testing.T) {
+		called := false
+		injectionCalled = &called
+
+		TestReorgToShorterRemovesCanonMapping(t)
+
+		if *injectionCalled != true {
+			t.Fatalf("pluginNewSideBlock injection in blockChain.writeBlockAndSetHead() not called")
 		}
 	})
 }	
