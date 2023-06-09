@@ -18,7 +18,7 @@ import (
 type Subcommand func(core.Context, []string) error
 
 type pluginDetails struct {
-	p *plugin.Plugin
+	p    *plugin.Plugin
 	name string
 }
 
@@ -72,12 +72,12 @@ func NewPluginLoader(target string) (*PluginLoader, error) {
 	for _, file := range files {
 		fpath := path.Join(target, file.Name())
 		if !strings.HasSuffix(file.Name(), ".so") {
-			log.Debug("File inplugin directory is not '.so' file. Skipping.", "file", fpath)
+			log.Debug("File in plugin directory is not '.so' file. Skipping.", "file", fpath)
 			continue
 		}
 		plug, err := plugin.Open(fpath)
 		if err != nil {
-			log.Warn("File in plugin directory could not be loaded: %v", "file", fpath, "error", err.Error())
+			log.Warn("File in plugin directory could not be loaded", "file", fpath, "error", err)
 			continue
 		}
 		// Any type of plugin can potentially specify flags
