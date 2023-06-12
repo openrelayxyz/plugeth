@@ -212,6 +212,12 @@ type Config struct {
 // CreateConsensusEngine creates a consensus engine for the given chain configuration.
 func CreateConsensusEngine(stack *node.Node, ethashConfig *ethash.Config, cliqueConfig *params.CliqueConfig, notify []string, noverify bool, db ethdb.Database) consensus.Engine {
 	// If proof-of-authority is requested, set it up
+	//begin PluGeth code injection
+	if engine := pluginGetEngine(stack, notify, noverify, db); engine != nil {
+		log.Debug("returning plugin consensus engine")
+		return engine
+	}
+	//end PluGeth code injection
 	var engine consensus.Engine
 	if cliqueConfig != nil {
 		engine = clique.New(cliqueConfig, db)
