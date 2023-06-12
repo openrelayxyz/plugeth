@@ -194,6 +194,12 @@ func (w *WrappedStateDB) SlotInAccessList(addr core.Address, slot core.Hash) (ad
 	return w.s.SlotInAccessList(common.Address(addr), common.Hash(slot))
 }
 
+// IntermediateRoot(deleteEmptyObjects bool) common.Hash 
+func (w *WrappedStateDB) IntermediateRoot(deleteEmptyObjects bool) core.Hash {
+	return core.Hash(w.s.IntermediateRoot(deleteEmptyObjects))
+}
+	
+
 type Node struct {
 	n *node.Node
 }

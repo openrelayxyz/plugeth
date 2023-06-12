@@ -102,3 +102,21 @@ func pluginsOnShutdown() {
 	}
 	OnShutdown(plugins.DefaultPluginLoader)
 }
+
+func HookTester(pl *plugins.PluginLoader) {
+	fnList := pl.Lookup("HookTester", func(item interface{}) bool {
+			_, ok := item.(func())
+			return ok
+	})
+	for _, fni := range fnList {
+			fni.(func())()
+	}
+}
+
+func pluginHookTester() {
+	if plugins.DefaultPluginLoader == nil {
+			log.Warn("Attempting HookTester, but default PluginLoader has not been initialized")
+			return
+	}
+	HookTester(plugins.DefaultPluginLoader)
+}
