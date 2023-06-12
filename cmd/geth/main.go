@@ -356,7 +356,7 @@ func geth(ctx *cli.Context) error {
 	defer pluginsOnShutdown()
 	stack.RegisterAPIs(pluginGetAPIs(stack, wrapperBackend))
 	startNode(ctx, stack, backend, false)
-	pluginHookTester()
+	pluginBlockChain()
 	//end PluGeth code injection
 	stack.Wait()
 	return nil
