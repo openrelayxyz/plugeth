@@ -134,6 +134,17 @@ func TestPlugethInjections(t *testing.T) {
 		}
 	})
 
+	t.Run(fmt.Sprintf("test treiIntervarFlushClone"), func(t *testing.T) {
+		called := false
+		injectionCalled = &called
+
+		_ = blockchain.writeBlockWithState(block, []*types.Receipt{}, statedb)
+
+		if *injectionCalled != true {
+			t.Fatalf("pluginNewSideBlock injection in blockChain.writeBlockAndSetHead() not called")
+		}
+	})
+
 	t.Run(fmt.Sprintf("test NewSideBlock"), func(t *testing.T) {
 		called := false
 		injectionCalled = &called
@@ -144,4 +155,5 @@ func TestPlugethInjections(t *testing.T) {
 			t.Fatalf("pluginNewSideBlock injection in blockChain.writeBlockAndSetHead() not called")
 		}
 	})
+	
 }	
