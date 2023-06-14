@@ -9,7 +9,6 @@ import (
 	"github.com/ethereum/go-ethereum/consensus"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
-	// "github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins/wrappers"
@@ -125,28 +124,11 @@ func gethToUtilsWithdrawals(withdrawals []*types.Withdrawal) []*ptypes.Withdrawa
 func gethToUtilsBlock(block *types.Block) *ptypes.Block {
 	if block == nil { return nil }
 	return ptypes.NewBlockWithHeader(gethToUtilsHeader(block.Header())).WithBody(gethToUtilsTransactions(block.Transactions()), gethToUtilsHeaders(block.Uncles())).WithWithdrawals(gethToUtilsWithdrawals(block.Withdrawals()))
-	
-	// NewBlockWithWithdrawals(
-	// 	gethToUtilsHeader(block.Header()), 
-	// 	gethToUtilsTransactions(block.Transactions()),
-	// 	gethToUtilsHeaders(block.Uncles()), 
-	// 	gethToUtilsReceipts(block.Receipts()), 
-	// 	gethToUtilsWithdrawals(block.Withdrawals()),
-	// 	&hasherWrapper{trie.NewStackTrie(nil)},
-	// )
 }
 
 func utilsToGethBlock(block *ptypes.Block) *types.Block {
 	if block == nil { return nil }
 	return types.NewBlockWithHeader(utilsToGethHeader(block.Header())).WithBody(utilsToGethTransactions(block.Transactions()), utilsToGethHeaders(block.Uncles())).WithWithdrawals(utilsToGethWithdrawals(block.Withdrawals()))
-	// return types.NewBlockWithWithdrawals(
-	// 	utilsToGethHeader(block.Header()),
-	// 	utilsToGethTransactions(block.Transactions()),
-	// 	utilsToGethHeaders(block.Uncles()), 
-	// 	utilsToGethReceipts(block.Receipts()), 
-	// 	utilsToGethWithdrawals(block.Withdrawals()),
-	// 	trie.NewStackTrie(nil),
-	// )
 }
 
 func utilsToGethHeaders(headers []*ptypes.Header) []*types.Header {
@@ -169,27 +151,6 @@ func utilsToGethTransactions(transactions []*ptypes.Transaction) []*types.Transa
 	}
 	return txs
 }
-// func utilsToGethReceipts(receipts []*ptypes.Receipt) []*types.Receipt {
-// 	if receipts == nil { return nil }
-// 	preceipts := make([]*types.Receipt, len(receipts))
-// 	for i, receipt := range receipts {
-// 		preceipts[i] = &types.Receipt{
-// 			Type: receipt.Type,
-// 			PostState: receipt.PostState,
-// 			Status: receipt.Status,
-// 			CumulativeGasUsed: receipt.CumulativeGasUsed,
-// 			Bloom: types.Bloom(receipt.Bloom),
-// 			Logs: utilsToGethLogs(receipt.Logs),
-// 			TxHash: common.Hash(receipt.TxHash),
-// 			ContractAddress: common.Address(receipt.ContractAddress),
-// 			GasUsed: receipt.GasUsed,
-// 			BlockHash: common.Hash(receipt.BlockHash),
-// 			BlockNumber: receipt.BlockNumber,
-// 			TransactionIndex: receipt.TransactionIndex,
-// 		}
-// 	}
-// 	return preceipts
-// }
 func utilsToGethWithdrawals(withdrawals []*ptypes.Withdrawal) []*types.Withdrawal {
 	if withdrawals == nil { return nil }
 	pwithdrawals := make([]*types.Withdrawal, len(withdrawals))
@@ -210,7 +171,6 @@ func gethToUtilsBlockChan(ch chan<- *types.Block) chan<- *ptypes.Block {
 		for block := range pchan {
 			ch <- utilsToGethBlock(block)
 		}
-		// close(ch)
 	}()
 	return pchan
 }
@@ -430,7 +390,6 @@ func (ew *engineWrapper) Prepare(chain consensus.ChainHeaderReader, header *type
 	if err := ew.engine.Prepare(&WrappedHeaderReader{chain, nil}, uHeader); err != nil {
 		return err
 	}
-	// header.Difficulty = uHeader.Difficulty
 	*header = *utilsToGethHeader(uHeader)
 	return nil
 }

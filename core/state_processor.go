@@ -75,7 +75,7 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 	blockTracer, ok := pluginGetBlockTracer(header.Hash(), statedb)
 	if ok {
 		cfg.Tracer = blockTracer
-		cfg.Debug = true
+		// cfg.Debug = true
 	}
 	// end pluGeth code injection
 	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)

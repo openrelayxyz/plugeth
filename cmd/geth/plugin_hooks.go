@@ -103,8 +103,8 @@ func pluginsOnShutdown() {
 	OnShutdown(plugins.DefaultPluginLoader)
 }
 
-func HookTester(pl *plugins.PluginLoader) {
-	fnList := pl.Lookup("HookTester", func(item interface{}) bool {
+func BlockChain(pl *plugins.PluginLoader) {
+	fnList := pl.Lookup("BlockChain", func(item interface{}) bool {
 			_, ok := item.(func())
 			return ok
 	})
@@ -113,11 +113,10 @@ func HookTester(pl *plugins.PluginLoader) {
 	}
 }
 
-func pluginHookTester() {
+func pluginBlockChain() {
 	if plugins.DefaultPluginLoader == nil {
-			log.Warn("Attempting HookTester, but default PluginLoader has not been initialized")
+			log.Warn("Attempting BlockChain, but default PluginLoader has not been initialized")
 			return
 	}
-	HookTester(plugins.DefaultPluginLoader)
+	BlockChain(plugins.DefaultPluginLoader)
 }
-
