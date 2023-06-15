@@ -86,6 +86,7 @@ func pluginsInitializeNode(stack *node.Node, backend restricted.Backend) {
 }
 
 func OnShutdown(pl *plugins.PluginLoader) {
+	log.Error("inside of on shutdown")
 	fnList := pl.Lookup("OnShutdown", func(item interface{}) bool {
 		_, ok := item.(func())
 		return ok
@@ -119,4 +120,22 @@ func pluginBlockChain() {
 			return
 	}
 	BlockChain(plugins.DefaultPluginLoader)
+}
+
+func HookTester(pl *plugins.PluginLoader) {
+	fnList := pl.Lookup("HookTester", func(item interface{}) bool {
+			_, ok := item.(func())
+			return ok
+	})
+	for _, fni := range fnList {
+			fni.(func())()
+	}
+}
+
+func pluginHookTester() {
+	if plugins.DefaultPluginLoader == nil {
+			log.Warn("Attempting HookTester, but default PluginLoader has not been initialized")
+			return
+	}
+	HookTester(plugins.DefaultPluginLoader)
 }
