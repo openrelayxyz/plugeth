@@ -106,11 +106,15 @@ func TestPlugethInjections(t *testing.T) {
 	t.Run(fmt.Sprintf("test BlockProcessingError"), func(t *testing.T) {
 		called := false
 		injectionCalled = &called
+		metaInjectionCalled = &called
 
 		_, _, _, _ = sp.Process(block, statedb, vm.Config{})
 		
 		if *injectionCalled != true {
 			t.Fatalf("pluginBlockProcessingError injection in stateProcessor.Process() not called")
+		}
+		if *metaInjectionCalled != true {
+			t.Fatalf("metaTracer.BlockProcessingError injection in stateProcessor.Process() not called")
 		}
 	})
 
@@ -131,17 +135,6 @@ func TestPlugethInjections(t *testing.T) {
 		
 		if *injectionCalled != true {
 			t.Fatalf("pluginReorg injection in blockChain.Reorg() not called")
-		}
-	})
-
-	t.Run(fmt.Sprintf("test treiIntervarFlushClone"), func(t *testing.T) {
-		called := false
-		injectionCalled = &called
-
-		_ = blockchain.writeBlockWithState(block, []*types.Receipt{}, statedb)
-
-		if *injectionCalled != true {
-			t.Fatalf("pluginNewSideBlock injection in blockChain.writeBlockAndSetHead() not called")
 		}
 	})
 

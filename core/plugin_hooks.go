@@ -19,6 +19,7 @@ import (
 )
 
 var injectionCalled *bool
+var metaInjectionCalled *bool
 
 func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
 	fnList := pl.Lookup("PreProcessBlock", func(item interface{}) bool {
@@ -229,6 +230,12 @@ func (mt *metaTracer) PreProcessTransaction(tx *types.Transaction, block *types.
 	}
 }
 func (mt *metaTracer) BlockProcessingError(tx *types.Transaction, block *types.Block, err error) {
+
+	if metaInjectionCalled != nil {
+		called := true
+		metaInjectionCalled = &called
+	}
+
 	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	transactionHash := core.Hash(tx.Hash())
