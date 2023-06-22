@@ -4,6 +4,7 @@ import (
 	"context"
 	"reflect"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/plugins"
 )
 
 
@@ -121,7 +122,24 @@ func callbackifyChanPubSub(receiver, fn reflect.Value) *callback {
 	return c
 }
 
+func RPCSubscription(pl *plugins.PluginLoader) {
+	fnList := pl.Lookup("RPCSubscriptionTest", func(item interface{}) bool {
+		_, ok := item.(func())
+		return ok
+	})
+	for _, fni := range fnList {
+		if fn, ok := fni.(func()); ok {
+			fn()
+		}
+	}
+}
+
 func pluginExtendedCallbacks(callbacks map[string]*callback, receiver reflect.Value) {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting RPCSubscriptionTest, but default PluginLoader has not been initialized")
+		return
+	}
+	RPCSubscription(plugins.DefaultPluginLoader)
 	typ := receiver.Type()
 	for m := 0; m < typ.NumMethod(); m++ {
 		method := typ.Method(m)

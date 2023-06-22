@@ -125,7 +125,6 @@ func PluginNewHead(pl *plugins.PluginLoader, block *types.Block, hash common.Has
 		_, ok := item.(func([]byte, core.Hash, [][]byte, *big.Int))
 		return ok
 	})
-	log.Error("inside of pluginNewHead()", "len fnList", len(fnList))
 	blockBytes, _ := rlp.EncodeToBytes(block)
 	logBytes := make([][]byte, len(logs))
 	for i, l := range logs {
