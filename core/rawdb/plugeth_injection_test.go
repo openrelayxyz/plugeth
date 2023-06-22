@@ -3,48 +3,48 @@ package rawdb
 
 import (
 	"fmt"
-	"os"
 	"testing"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/ethdb"
 )
 
 
+func TestPlugethInjections(t *testing.T) {
+	var valuesRaw [][]byte
+	var valuesRLP []*big.Int
+	for x := 0; x < 100; x++ {
+		v := getChunk(256, x)
+		valuesRaw = append(valuesRaw, v)
+		iv := big.NewInt(int64(x))
+		iv = iv.Exp(iv, iv, nil)
+		valuesRLP = append(valuesRLP, iv)
+	}
+	tables := map[string]bool{"raw": true, "rlp": false}
+	f, _ := newFreezerForTesting(t, tables)
 
-
-func TestAncientsInjections(t *testing.T) {
-
-	test_dir_path := "./injection_test_dir"
-	f, _ := NewFreezer(test_dir_path, "plugeth hook test", false, uint32(0), map[string]bool{"test": false})
-
-	t.Run(fmt.Sprintf("test ModifyAncients"), func(t *testing.T) {
+	t.Run(fmt.Sprintf("test plugeth injections"), func(t *testing.T) {
 		called := false
-		injectionCalled = &called
-		_, _ = f.ModifyAncients(func (ethdb.AncientWriteOp) error {return nil})
-		if *injectionCalled != true {
+		modifyAncientsInjection = &called
+
+		_, _ = f.ModifyAncients(func(op ethdb.AncientWriteOp) error {
+
+			appendRawInjection = &called
+			_ = op.AppendRaw("raw", uint64(0), valuesRaw[0])
+			if *appendRawInjection != true {
+				t.Fatalf("pluginTrackUpdate injection in AppendRaw not called")
+			}
+
+			appendInjection = &called
+			_ = op.Append("rlp", uint64(0), valuesRaw[0])
+			if *appendInjection != true {
+				t.Fatalf("pluginTrackUpdate injection in Append not called")
+			}
+
+			return nil
+	})
+		if *modifyAncientsInjection != true {
 			t.Fatalf("pluginCommitUpdate injection in ModifyAncients not called")
-		}
-	})
-
-	os.RemoveAll(test_dir_path)
-
-	fb := newFreezerBatch(f)
-
-	t.Run(fmt.Sprintf("test Append"), func(t *testing.T) {
-		var item interface{}
-		called := false
-		injectionCalled = &called
-		_ = fb.Append("kind", uint64(0), item)
-		if *injectionCalled != true {
-			t.Fatalf("PluginTrackUpdate injection in Append not called")
-		}
-	})
-
-	t.Run(fmt.Sprintf("test AppendRaw"), func(t *testing.T) {
-		called := false
-		injectionCalled = &called
-		_ = fb.AppendRaw("kind", uint64(100), []byte{})
-		if *injectionCalled != true {
-			t.Fatalf("PluginTrackUpdate injection in AppendRaw not called")
 		}
 	})
 }
