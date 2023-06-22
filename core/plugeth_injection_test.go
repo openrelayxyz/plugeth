@@ -1,8 +1,6 @@
 package core
 
 import (
-	// "reflect"
-	// "sync/atomic"
 	"hash"
 	"fmt"
 	"testing"
