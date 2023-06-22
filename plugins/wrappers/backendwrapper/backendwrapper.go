@@ -11,8 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	gcore "github.com/ethereum/go-ethereum/core"
-	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
@@ -487,7 +488,6 @@ func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (cor
 	return NewWrappedTrie(acTr), nil
 }
 
-
-
-
-
+func (b *Backend) GetContractCode(h core.Hash) ([]byte, error) {
+	return state.NewDatabase(b.b.ChainDb()).ContractCode(common.Hash{}, common.Hash(h))
+}
