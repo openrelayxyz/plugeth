@@ -20,7 +20,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,6 +57,9 @@ const (
 var (
 	// flags that configure the node
 	nodeFlags = flags.Merge([]cli.Flag{
+		//begin PluGeth code injection
+		utils.PluginsDirFlag,
+		//end PluGeth code injection
 		utils.IdentityFlag,
 		utils.UnlockedAccountFlag,
 		utils.PasswordFileFlag,
@@ -336,7 +339,14 @@ func prepare(ctx *cli.Context) {
 // blocking mode, waiting for it to be shut down.
 func geth(ctx *cli.Context) error {
 	//begin PluGeth code injection
-	if err := plugins.Initialize(path.Join(ctx.String(utils.DataDirFlag.Name), "plugins"), ctx); err != nil {
+	var pluginsDir string
+	if ctx.IsSet(utils.PluginsDirFlag.Name) {
+		pluginsDir = ctx.String(utils.PluginsDirFlag.Name)
+	} else {
+		pluginsDir = filepath.Join(ctx.String(utils.DataDirFlag.Name), "plugins")
+	}
+
+	if err := plugins.Initialize(pluginsDir, ctx); err != nil {
 		return err
 	}
 	prepare(ctx)
