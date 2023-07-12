@@ -373,15 +373,17 @@ func (ew *engineWrapper) Author(header *types.Header) (common.Address, error) {
 	addr, err := ew.engine.Author(gethToUtilsHeader(header))
 	return common.Address(addr), err
 }
-func (ew *engineWrapper) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header, seal bool) error {
-	return ew.engine.VerifyHeader(&WrappedHeaderReader{chain, nil}, gethToUtilsHeader(header), seal)
+func (ew *engineWrapper) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header) error {
+	var dummySeal bool
+	return ew.engine.VerifyHeader(&WrappedHeaderReader{chain, nil}, gethToUtilsHeader(header), dummySeal)
 }
-func (ew *engineWrapper) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
+func (ew *engineWrapper) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header) (chan<- struct{}, <-chan error) {
 	pheaders := make([]*ptypes.Header, len(headers))
 	for i, header := range headers {
 		pheaders[i] = gethToUtilsHeader(header)
 	}
-	return ew.engine.VerifyHeaders(&WrappedHeaderReader{chain, nil}, pheaders, seals)
+	dummySeals := []bool{false, false}
+	return ew.engine.VerifyHeaders(&WrappedHeaderReader{chain, nil}, pheaders, dummySeals)
 }
 func (ew *engineWrapper) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
 	return ew.engine.VerifyUncles(&WrappedChainReader{chain, nil}, gethToUtilsBlock(block))

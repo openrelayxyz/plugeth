@@ -6,6 +6,13 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
+// Is t context.Context or *context.Context?
+func isContextType(t reflect.Type) bool {
+	for t.Kind() == reflect.Ptr {
+			t = t.Elem()
+	}
+	return t == contextType
+}
 
 func isChanType(t reflect.Type) bool {
 	// Pointers to channels are weird, but whatever

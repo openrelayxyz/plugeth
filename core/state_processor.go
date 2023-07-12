@@ -82,7 +82,6 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 		// cfg.Debug = true
 	}
 	// end pluGeth code injection
-	vmenv := vm.NewEVM(blockContext, vm.TxContext{}, statedb, p.config, cfg)
 	// begin PluGeth code injection
 	pluginPreProcessBlock(block)
 	blockTracer.PreProcessBlock(block)
