@@ -18,6 +18,9 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/core"
 )
 
+var injectionCalled *bool
+var metaInjectionCalled *bool
+
 func PluginPreProcessBlock(pl *plugins.PluginLoader, block *types.Block) {
 	fnList := pl.Lookup("PreProcessBlock", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, uint64, []byte))
@@ -68,6 +71,12 @@ func PluginBlockProcessingError(pl *plugins.PluginLoader, tx *types.Transaction,
 	}
 }
 func pluginBlockProcessingError(tx *types.Transaction, block *types.Block, err error) {
+
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called
+	}
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting BlockProcessingError, but default PluginLoader has not been initialized")
 		return
@@ -160,6 +169,7 @@ func pluginNewSideBlock(block *types.Block, hash common.Hash, logs []*types.Log)
 }
 
 func PluginReorg(pl *plugins.PluginLoader, commonBlock *types.Block, oldChain, newChain types.Blocks) {
+
 	fnList := pl.Lookup("Reorg", func(item interface{}) bool {
 		_, ok := item.(func(core.Hash, []core.Hash, []core.Hash))
 		return ok
@@ -179,6 +189,12 @@ func PluginReorg(pl *plugins.PluginLoader, commonBlock *types.Block, oldChain, n
 	}
 }
 func pluginReorg(commonBlock *types.Block, oldChain, newChain types.Blocks) {
+
+	if injectionCalled != nil {
+		called := true
+		injectionCalled = &called
+	}
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting Reorg, but default PluginLoader has not been initialized")
 		return
@@ -213,6 +229,12 @@ func (mt *metaTracer) PreProcessTransaction(tx *types.Transaction, block *types.
 	}
 }
 func (mt *metaTracer) BlockProcessingError(tx *types.Transaction, block *types.Block, err error) {
+
+	if metaInjectionCalled != nil {
+		called := true
+		metaInjectionCalled = &called
+	}
+
 	if len(mt.tracers) == 0 { return }
 	blockHash := core.Hash(block.Hash())
 	transactionHash := core.Hash(tx.Hash())

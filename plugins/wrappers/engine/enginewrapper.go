@@ -151,7 +151,6 @@ func utilsToGethTransactions(transactions []*ptypes.Transaction) []*types.Transa
 	}
 	return txs
 }
-
 func utilsToGethWithdrawals(withdrawals []*ptypes.Withdrawal) []*types.Withdrawal {
 	if withdrawals == nil { return nil }
 	pwithdrawals := make([]*types.Withdrawal, len(withdrawals))
