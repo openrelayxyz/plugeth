@@ -1,0 +1,1 @@
+map[LiveCaptureEnd:{} LiveCaptureStart:{} LiveCaptureState:{} LivePostProcessBlock:{} PostProcessBlock:{}]
