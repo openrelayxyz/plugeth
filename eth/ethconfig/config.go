@@ -33,6 +33,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethdb"
 	"github.com/ethereum/go-ethereum/miner"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/log"
 )
 
 // FullNodeGPO contains default gasprice oracle settings for full node.
@@ -170,28 +171,11 @@ type Config struct {
 func CreateConsensusEngine(config *params.ChainConfig, db ethdb.Database) (consensus.Engine, error) {
 	// If proof-of-authority is requested, set it up
 	//begin PluGeth code injection
-	if engine := pluginGetEngine(stack, notify, noverify, db); engine != nil {
-		log.Debug("returning plugin consensus engine")
-		return engine
+	if engine := pluginGetEngine(); engine != nil {
+		log.Error("returning plugin consensus engine")
+		return engine, nil
 	}
 	//end PluGeth code injection
-	if config.Clique != nil {
-		return beacon.New(clique.New(config.Clique, db)), nil
-	}
-	// If defaulting to proof-of-work, enforce an already merged network since
-	// we cannot run PoW algorithms and more, so we cannot even follow a chain
-	// not coordinated by a beacon node.
-	if !config.TerminalTotalDifficultyPassed {
-		return nil, errors.New("ethash is only supported as a historical component of already merged networks")
-	}
-	return beacon.New(ethash.NewFaker()), nil
-}
-
-// CreateConsensusEngine creates a consensus engine for the given chain config.
-// Clique is allowed for now to live standalone, but ethash is forbidden and can
-// only exist on already merged networks.
-func CreateConsensusEngine(config *params.ChainConfig, db ethdb.Database) (consensus.Engine, error) {
-	// If proof-of-authority is requested, set it up
 	if config.Clique != nil {
 		return beacon.New(clique.New(config.Clique, db)), nil
 	}
