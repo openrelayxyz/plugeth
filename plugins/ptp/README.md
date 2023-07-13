@@ -1,0 +1,9 @@
+## Plugeth Test Plugin 
+
+This plugin works in a very similar fashion as the [Consensus Engine plugin](https://github.com/openrelayxyz/plugeth-plugins/tree/master/packages/consensus-engine#readme). There is a bash script, `./test/run-test.sh` which instantiates three individual nodes which execute a pseudo blockchain. Throughout the execution of the chain many of the PluGeth hooks and injections are engaged which in turn trigger `pluginBlockChain()` to track the invoked methods and complain if any are not called. Thus we can confirm that the PluGeth application is fully implemented on the target client. 
+
+In order to use the plugin navigate to the `/test/` directory. Change the permissions on `run-test.sh` to enable execution. Then point the executable geth file to a Geth binary like so: `$ /path/to/geth/geth ./run-test.sh `. The test takes roughly 4.5 mins to run. If successful it should close with an exit code of `0`. 
+
+There are four methods not covered by testing at this time: `LiveCaptureFault()`, `LiveCaptureEnter()`, `LiveCaptureExit()`, `LiveTracerResult()`. Also, there are several injections which fall outside of the testing parameters of this application:     `./core/` `NewSideBlock()`, `Reorg()`, `BlockProcessingError()`, `./core/rawdb/` `ModifyAncients()`, `AppendAncient()`. These are covered by stand alone standard go tests which can all be run by navigating to the respective directories and running: `go test -v -run TestPlugethInjections`. 
+
+Note: depending on where the script is deployed Geth may complain that the path to the `.ipc` file is too long. Renaming of the directories or moving the project may be necessary.
