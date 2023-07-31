@@ -14,6 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/event"
+	gparams "github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/trie"
@@ -461,6 +462,28 @@ func (b *Backend) ChainConfig() *params.ChainConfig {
 		}
 	}
 	return b.chainConfig
+}
+
+func CloneChainConfig(cf *gparams.ChainConfig) *params.ChainConfig {
+	result := &params.ChainConfig{}
+	nval := reflect.ValueOf(result)
+	ntype := nval.Elem().Type()
+	lval := reflect.ValueOf(cf)
+	for i := 0; i < nval.Elem().NumField(); i++ {
+		field := ntype.Field(i)
+		v := nval.Elem().FieldByName(field.Name)
+		lv := lval.Elem().FieldByName(field.Name)
+		log.Info("Checking value for", "field", field.Name)
+		if lv.Kind() != reflect.Invalid {
+			// If core.ChainConfig doesn't have this field, skip it.
+			if v.Type() == lv.Type() && lv.CanSet() {
+				lv.Set(v)
+			} else {
+				convertAndSet(lv, v)
+			}
+		}
+	}
+	return result
 }
 
 func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {

@@ -171,8 +171,8 @@ type Config struct {
 func CreateConsensusEngine(config *params.ChainConfig, db ethdb.Database) (consensus.Engine, error) {
 	// If proof-of-authority is requested, set it up
 	//begin PluGeth code injection
-	if engine := pluginGetEngine(); engine != nil {
-		log.Error("returning plugin consensus engine")
+	if engine := pluginGetEngine(config, db); engine != nil {
+		log.Info("returning plugin consensus engine")
 		return engine, nil
 	}
 	//end PluGeth code injection

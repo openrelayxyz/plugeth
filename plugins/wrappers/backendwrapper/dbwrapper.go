@@ -11,7 +11,7 @@ type dbWrapper struct {
 	db ethdb.Database
 }
 
-func NewDB(d ethdb.Database) restricted.Database {
+func NewDb(d ethdb.Database) restricted.Database {
 	return &dbWrapper{d}
 }
 
