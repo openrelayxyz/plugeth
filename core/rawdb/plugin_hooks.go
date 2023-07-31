@@ -2,18 +2,33 @@ package rawdb
 
 
 import (
+	"sync"
+
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
-	"sync"
 )
 
 var (
 	freezerUpdates map[uint64]map[string]interface{}
 	lock sync.Mutex
+	modifyAncientsInjection *bool
+	appendRawInjection *bool
+	appendInjection *bool
 )
 
 func PluginTrackUpdate(num uint64, kind string, value interface{}) {
+
+	if appendRawInjection != nil {
+		called := true
+		appendRawInjection = &called 
+	} 
+
+	if appendInjection != nil {
+		called := true
+		appendInjection = &called 
+	} 
+
 	lock.Lock()
 	defer lock.Unlock()
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
@@ -26,6 +41,12 @@ func PluginTrackUpdate(num uint64, kind string, value interface{}) {
 }
 
 func pluginCommitUpdate(num uint64) {
+
+	if modifyAncientsInjection != nil {
+		called := true
+		modifyAncientsInjection = &called 
+	} 
+
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting CommitUpdate, but default PluginLoader has not been initialized")
 		return
@@ -34,6 +55,7 @@ func pluginCommitUpdate(num uint64) {
 }
 
 func PluginCommitUpdate(pl *plugins.PluginLoader, num uint64) {
+	
 	lock.Lock()
 	defer lock.Unlock()
 	if freezerUpdates == nil { freezerUpdates = make(map[uint64]map[string]interface{}) }
