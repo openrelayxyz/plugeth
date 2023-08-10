@@ -167,7 +167,7 @@ func (w *WrappedStateDB) GetState(addr core.Address, hsh core.Hash) core.Hash {
 
 // HasSuicided(Address) bool
 func (w *WrappedStateDB) HasSuicided(addr core.Address) bool { // I figured we'd skip some of the future labor and update the name now
-	return w.s.HasSuicided(common.Address(addr))
+	return w.s.HasSelfDestructed(common.Address(addr))
 }
 
 // // Exist reports whether the given account exists in state.
@@ -231,7 +231,7 @@ func (n *Node) ResolvePath(x string) string {
 	return n.n.ResolvePath(x)
 }
 func (n *Node) Attach() (core.Client, error) {
-	return n.n.Attach()
+	return n.n.Attach(), nil
 }
 func (n *Node) Close() error {
 	return n.n.Close()

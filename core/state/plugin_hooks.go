@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/plugins"
-	"github.com/ethereum/go-ethereum/core/state/snapshot"
+	// "github.com/ethereum/go-ethereum/core/state/snapshot"
 	"github.com/openrelayxyz/plugeth-utils/core"
+	"github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/ethereum/go-ethereum/plugins"
 )
 
 type pluginSnapshot struct {
@@ -17,7 +19,11 @@ func (s *pluginSnapshot) Root() common.Hash {
 	return s.root
 }
 
-func (s *pluginSnapshot) Account(hash common.Hash) (*snapshot.Account, error) {
+// func (s *pluginSnapshot) Account(hash common.Hash) (*snapshot.Account, error) {
+// 	return nil, fmt.Errorf("not implemented")
+// }
+
+func (s *pluginSnapshot) Account(hash common.Hash) (*types.SlimAccount, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 

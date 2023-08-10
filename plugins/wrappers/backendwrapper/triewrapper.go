@@ -38,7 +38,7 @@ func (t *WrappedTrie) Hash() core.Hash {
 }
 
 func (t *WrappedTrie) NodeIterator(startKey []byte) core.NodeIterator {
-	itr := t.t.NodeIterator(startKey)
+	itr, _ := t.t.NodeIterator(startKey)
 	return &WrappedNodeIterator{itr}
 }
 
