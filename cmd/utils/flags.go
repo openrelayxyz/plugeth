@@ -88,6 +88,14 @@ import (
 
 var (
 	// General settings
+	//begin PluGeth code injection
+	PluginsDirFlag = &flags.DirectoryFlag{
+		Name:     "pluginsdir",
+		Usage:    "Directory for plugins",
+		Value:    flags.DirectoryString(filepath.Join("<datadir>", "plugins")),
+		Category: flags.EthCategory,
+	}
+	//end PluGeth code injection
 	DataDirFlag = &flags.DirectoryFlag{
 		Name:     "datadir",
 		Usage:    "Data directory for the databases and keystore",

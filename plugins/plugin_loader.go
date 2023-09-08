@@ -8,7 +8,7 @@ import (
 	"plugin"
 	"reflect"
 	"strings"
-	
+
 	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/openrelayxyz/plugeth-utils/core"
@@ -58,6 +58,7 @@ func Lookup(name string, validate func(interface{}) bool) []interface{} {
 var DefaultPluginLoader *PluginLoader
 
 func NewPluginLoader(target string) (*PluginLoader, error) {
+	log.Info("Loading plugins from directory", "path", target)
 	pl := &PluginLoader{
 		Plugins:     []pluginDetails{},
 		Subcommands: make(map[string]Subcommand),
