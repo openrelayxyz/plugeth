@@ -5,9 +5,11 @@ import (
 	"math/big"
 	"time"
 	"os"
-	
+	"bytes"
+
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted/hexutil"
+	"github.com/openrelayxyz/plugeth-utils/restricted/crypto"
 )
 
 var hookChan chan map[string]struct{} = make(chan map[string]struct{}, 10)
@@ -223,6 +225,8 @@ func txTracer() {
 		log.Error("debug_traceTransaction failed",  "err", err)
 	}
 
+	testGetContractCode(t3)
+
 	debugArg0 := map[string]interface{}{
 		"input": "0x60006000fd",
 		"from": coinBase,
@@ -242,7 +246,6 @@ func txTracer() {
 	var trResult1 interface{}
 	err = client.Call(&trResult1, "debug_traceCall", debugArg1, "latest", t)
 
-
 	final := map[string]interface{}{
 		"input": "0x61520873000000000000000000000000000000000000000060006000600060006000f1",
 		"from": coinBase,
@@ -256,5 +259,41 @@ func txTracer() {
 
 	quit <- "quit"
 
+}
+
+func testGetContractCode(hash core.Hash) {
+	
+	cl := apis[0].Service.(*engineService).stack
+	client, err := cl.Attach()
+	if err != nil {
+		log.Error("Error connecting with client testGetContractCode")
+	}
+
+	receipt := map[string]interface{}{}
+	err = client.Call(&receipt, "eth_getTransactionReceipt", hash)
+	if err != nil {
+		log.Error("Error calling getTransactionReciepts, testGetContractCode", "err", err)
+	}
+
+	var controlCode hexutil.Bytes
+	err = client.Call(&controlCode, "eth_getCode", receipt["contractAddress"], receipt["blockNumber"])
+	if err != nil {
+		log.Error("Error calling getCode, testGetContractCode", "err", err)
+	}
+
+	codeHash := crypto.Keccak256Hash(controlCode)
+
+	testCode, err := apis[0].Service.(*engineService).backend.GetContractCode(codeHash)
+	if err != nil {
+		log.Error("Error calling GetContractCode", "err", err)
+	}
+
+	if !bytes.Equal(testCode, controlCode) {
+
+		log.Error("Exit with error, return value from GetContractCode is divergent from control value")
+		os.Exit(1)
+	} 
+
+	log.Info("made it through checkGetContractCode")
 }
 
