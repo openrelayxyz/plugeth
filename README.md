@@ -25,6 +25,10 @@ rather than forking the Geth project. Out of the box, PluGeth behaves exactly
 like upstream Geth, but by installing plugins written in Golang, developers can
 extend its functionality in a wide variety of way.
 
+### Submitting Pull Requests
+
+We are eager to include contributions from the community into the project. We ask that pull requests which include new features to be covered by our test plugin found in: `/plugins/test-plugin`. The test design and instructions for use are documented there. If further assistance is needed please get in touch with us. 
+
 ### Contact Us
 
 If you're trying to do something that isn't supported by the current plugin system, Reach out to us on [Discord](https://discord.gg/Epf7b7Gr) and we'll help you figure out how to make it work.
