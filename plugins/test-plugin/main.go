@@ -261,14 +261,6 @@ func txTracer() {
 
 }
 
-// The function below was written to cover the contributions within the Laconic pull requests. Ultimately what we are doing
-// here is accessing the backend object returned from GetAPIs(). We then utilize one of the transactions being produced in
-// txFactory() to inspect the contract code and set up a scenario where we can confirm that GetContractCode() is indeed
-// returning the code we expect. If the return value is wrong we exit with error. The main thing to understand here is that
-// in setting up this function we are expanding the scope of the test plugin. Formerly the test case was designed to do a
-// roll call of injections such that as we merge upstream work we don't break PluGeth. Here we are testing PluGeth only. Please
-// take a look around this module and get back to us if anything is unclear.
-
 func testGetContractCode(hash core.Hash) {
 	
 	cl := apis[0].Service.(*engineService).stack
