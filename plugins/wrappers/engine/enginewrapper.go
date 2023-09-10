@@ -381,7 +381,7 @@ func (ew *engineWrapper) VerifyHeaders(chain consensus.ChainHeaderReader, header
 	for i, header := range headers {
 		pheaders[i] = gethToUtilsHeader(header)
 	}
-	dummySeals := []bool{false, false}
+	dummySeals := make([]bool, len(headers))
 	return ew.engine.VerifyHeaders(&WrappedHeaderReader{chain, nil}, pheaders, dummySeals)
 }
 func (ew *engineWrapper) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
