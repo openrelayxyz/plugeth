@@ -1,13 +1,24 @@
 package main
 
 import (
+	"github.com/ethereum/go-ethereum/cmd/utils"
+	gcore "github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/eth/ethconfig"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
+	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereum/go-ethereum/trie"
+	"github.com/ethereum/go-ethereum/trie/triedb/hashdb"
+	"github.com/ethereum/go-ethereum/trie/triedb/pathdb"
+	
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/plugins/wrappers"
-	"github.com/ethereum/go-ethereum/rpc"
+	
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
+
+	"github.com/urfave/cli/v2"
 )
 
 func apiTranslate(apis []core.API) []rpc.API {
@@ -119,4 +130,38 @@ func pluginBlockChain() {
 			return
 	}
 	BlockChain(plugins.DefaultPluginLoader)
+}
+
+func plugethCaptureTrieConfig(ctx *cli.Context, stack *node.Node) *trie.Config {
+
+	ec := new(ethconfig.Config)
+	utils.SetEthConfig(ctx, stack, ec)
+
+	cc := &gcore.CacheConfig{
+		TrieCleanLimit:      ec.TrieCleanCache,
+		TrieCleanNoPrefetch: ec.NoPrefetch,
+		TrieDirtyLimit:      ec.TrieDirtyCache,
+		TrieDirtyDisabled:   ec.NoPruning,
+		TrieTimeLimit:       ec.TrieTimeout,
+		SnapshotLimit:       ec.SnapshotCache,
+		Preimages:           ec.Preimages,
+		StateHistory:        ec.StateHistory,
+		StateScheme:         ec.StateScheme,
+	}
+
+	config := &trie.Config{Preimages: cc.Preimages}
+	if cc.StateScheme == rawdb.HashScheme {
+		config.HashDB = &hashdb.Config{
+			CleanCacheSize: cc.TrieCleanLimit * 1024 * 1024,
+		}
+	}
+	if cc.StateScheme == rawdb.PathScheme {
+		config.PathDB = &pathdb.Config{
+			StateHistory:   cc.StateHistory,
+			CleanCacheSize: cc.TrieCleanLimit * 1024 * 1024,
+			DirtyCacheSize: cc.TrieDirtyLimit * 1024 * 1024,
+		}
+	}
+
+	return config
 }

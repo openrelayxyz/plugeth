@@ -19,9 +19,9 @@ import (
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/trie"
-
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
+
 	"github.com/openrelayxyz/plugeth-utils/core"
 	"github.com/openrelayxyz/plugeth-utils/restricted"
 	"github.com/openrelayxyz/plugeth-utils/restricted/params"
@@ -44,10 +44,14 @@ type Backend struct {
 	removedLogsFeed event.Feed
 	removedLogsOnce sync.Once
 	chainConfig     *params.ChainConfig
+	trieConfig      *trie.Config
 }
 
-func NewBackend(b ethapi.Backend) *Backend {
-	return &Backend{b: b}
+func NewBackend(b ethapi.Backend, tc *trie.Config) *Backend {
+
+	return &Backend{
+		b: b,
+		trieConfig: tc}
 }
 
 func (b *Backend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
@@ -488,7 +492,7 @@ func CloneChainConfig(cf *gparams.ChainConfig) *params.ChainConfig {
 }
 
 func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
-	tr, err := trie.NewStateTrie(trie.TrieID(common.Hash(h)), trie.NewDatabase(b.b.ChainDb()))
+	tr, err := trie.NewStateTrie(trie.TrieID(common.Hash(h)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
 	if err != nil {
 		return nil, err
 	}
@@ -504,7 +508,7 @@ func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (cor
 	if err != nil {
 		return nil, err
 	}
-	acTr, err := trie.NewStateTrie(trie.StorageTrieID(common.Hash(stateRoot), crypto.Keccak256Hash(account[:]), common.Hash(act.Root)), trie.NewDatabase(b.b.ChainDb()))
+	acTr, err := trie.NewStateTrie(trie.StorageTrieID(common.Hash(stateRoot), crypto.Keccak256Hash(account[:]), common.Hash(act.Root)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
 	if err != nil {
 		return nil, err
 	}
@@ -512,5 +516,5 @@ func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (cor
 }
 
 func (b *Backend) GetContractCode(h core.Hash) ([]byte, error) {
-	return state.NewDatabase(b.b.ChainDb()).ContractCode(common.Hash{}, common.Hash(h))
+	return state.NewDatabase(b.b.ChainDb()).ContractCode(common.Address{}, common.Hash(h))
 }

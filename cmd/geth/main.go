@@ -41,6 +41,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/node"
 	"go.uber.org/automaxprocs/maxprocs"
+
 	"github.com/ethereum/go-ethereum/plugins"
 	"github.com/ethereum/go-ethereum/plugins/wrappers/backendwrapper"
 
@@ -351,8 +352,11 @@ func geth(ctx *cli.Context) error {
 			return fmt.Errorf("invalid command: %q", args[0])
 		}
 	}
+
 	stack, backend := makeFullNode(ctx)
-	wrapperBackend := backendwrapper.NewBackend(backend)
+	tc := plugethCaptureTrieConfig(ctx, stack)
+	wrapperBackend := backendwrapper.NewBackend(backend, tc)
+
 	pluginsInitializeNode(stack, wrapperBackend)
 	if ok, err := plugins.RunSubcommand(ctx); ok {
 		stack.Close()
