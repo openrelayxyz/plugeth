@@ -174,6 +174,8 @@ func New(root common.Hash, db Database, snaps *snapshot.Tree) (*StateDB, error) 
 		log.Debug("Snapshots not availble. Using plugin snapshot.")
 		sdb.snap = &pluginSnapshot{root}
 		sdb.stateObjectsDestruct = make(map[common.Address]*types.StateAccount)
+		sdb.accounts = make(map[common.Hash][]byte)
+		sdb.storages = make(map[common.Hash]map[common.Hash][]byte)
 	}
 	// End PluGeth section
 	return sdb, nil
