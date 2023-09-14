@@ -354,8 +354,8 @@ func geth(ctx *cli.Context) error {
 	}
 
 	stack, backend := makeFullNode(ctx)
-	tc := plugethCaptureTrieConfig(ctx, stack)
-	wrapperBackend := backendwrapper.NewBackend(backend, tc)
+	trieCfg := plugethCaptureTrieConfig(ctx, stack, backend)
+	wrapperBackend := backendwrapper.NewBackend(backend, trieCfg)
 
 	pluginsInitializeNode(stack, wrapperBackend)
 	if ok, err := plugins.RunSubcommand(ctx); ok {

@@ -5,6 +5,7 @@ import (
 	gcore "github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/eth/ethconfig"
+	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/node"
 	"github.com/ethereum/go-ethereum/rpc"
@@ -132,34 +133,66 @@ func pluginBlockChain() {
 	BlockChain(plugins.DefaultPluginLoader)
 }
 
-func plugethCaptureTrieConfig(ctx *cli.Context, stack *node.Node) *trie.Config {
+func plugethCaptureTrieConfig(ctx *cli.Context, stack *node.Node, backend ethapi.Backend) *trie.Config {
 
-	ec := new(ethconfig.Config)
-	utils.SetEthConfig(ctx, stack, ec)
+	ethCfg := new(ethconfig.Config)
 
-	cc := &gcore.CacheConfig{
-		TrieCleanLimit:      ec.TrieCleanCache,
-		TrieCleanNoPrefetch: ec.NoPrefetch,
-		TrieDirtyLimit:      ec.TrieDirtyCache,
-		TrieDirtyDisabled:   ec.NoPruning,
-		TrieTimeLimit:       ec.TrieTimeout,
-		SnapshotLimit:       ec.SnapshotCache,
-		Preimages:           ec.Preimages,
-		StateHistory:        ec.StateHistory,
-		StateScheme:         ec.StateScheme,
+	if ctx.IsSet(utils.CacheFlag.Name) || ctx.IsSet(utils.CacheTrieFlag.Name) {
+		ethCfg.TrieCleanCache = ctx.Int(utils.CacheFlag.Name) * ctx.Int(utils.CacheTrieFlag.Name) / 100
+	}
+	if ctx.IsSet(utils.CacheNoPrefetchFlag.Name) {
+		ethCfg.NoPrefetch = ctx.Bool(utils.CacheNoPrefetchFlag.Name)
+	}
+	if ctx.IsSet(utils.CacheFlag.Name) || ctx.IsSet(utils.CacheGCFlag.Name) {
+		ethCfg.TrieDirtyCache = ctx.Int(utils.CacheFlag.Name) * ctx.Int(utils.CacheGCFlag.Name) / 100
+	}
+	if ctx.IsSet(utils.GCModeFlag.Name) {
+		ethCfg.NoPruning = ctx.String(utils.GCModeFlag.Name) == "archive"
+	}
+	if ctx.IsSet(utils.CacheFlag.Name) || ctx.IsSet(utils.CacheSnapshotFlag.Name) {
+		ethCfg.SnapshotCache = ctx.Int(utils.CacheFlag.Name) * ctx.Int(utils.CacheSnapshotFlag.Name) / 100
+	}
+	ethCfg.Preimages = ctx.Bool(utils.CachePreimagesFlag.Name)
+	if ethCfg.NoPruning && !ethCfg.Preimages {
+		ethCfg.Preimages = true
+		log.Info("Enabling recording of key preimages since archive mode is used")
+	}
+	if ctx.IsSet(utils.StateHistoryFlag.Name) {
+		ethCfg.StateHistory = ctx.Uint64(utils.StateHistoryFlag.Name)
 	}
 
-	config := &trie.Config{Preimages: cc.Preimages}
-	if cc.StateScheme == rawdb.HashScheme {
+	chaindb := backend.ChainDb()
+
+	scheme, err := utils.ParseStateScheme(ctx, chaindb)
+	if err != nil {
+		utils.Fatalf("%v", err)
+	} 
+
+	ethCfg.StateScheme = scheme
+	
+	cacheCfg := &gcore.CacheConfig{
+		TrieCleanLimit:      ethCfg.TrieCleanCache,
+		TrieCleanNoPrefetch: ethCfg.NoPrefetch,
+		TrieDirtyLimit:      ethCfg.TrieDirtyCache,
+		TrieDirtyDisabled:   ethCfg.NoPruning,
+		TrieTimeLimit:       ethconfig.Defaults.TrieTimeout,
+		SnapshotLimit:       ethCfg.SnapshotCache,
+		Preimages:           ethCfg.Preimages,
+		StateHistory:        ethCfg.StateHistory,
+		StateScheme:         ethCfg.StateScheme,
+	}
+
+	config := &trie.Config{Preimages: cacheCfg.Preimages}
+	if cacheCfg.StateScheme == rawdb.HashScheme {
 		config.HashDB = &hashdb.Config{
-			CleanCacheSize: cc.TrieCleanLimit * 1024 * 1024,
+			CleanCacheSize: cacheCfg.TrieCleanLimit * 1024 * 1024,
 		}
 	}
-	if cc.StateScheme == rawdb.PathScheme {
+	if cacheCfg.StateScheme == rawdb.PathScheme {
 		config.PathDB = &pathdb.Config{
-			StateHistory:   cc.StateHistory,
-			CleanCacheSize: cc.TrieCleanLimit * 1024 * 1024,
-			DirtyCacheSize: cc.TrieDirtyLimit * 1024 * 1024,
+			StateHistory:   cacheCfg.StateHistory,
+			CleanCacheSize: cacheCfg.TrieCleanLimit * 1024 * 1024,
+			DirtyCacheSize: cacheCfg.TrieDirtyLimit * 1024 * 1024,
 		}
 	}
 
