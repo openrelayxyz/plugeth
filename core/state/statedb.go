@@ -962,6 +962,11 @@ func (s *StateDB) clearJournalAndRefund() {
 // storage iteration and constructs trie node deletion markers by creating
 // stack trie with iterated slots.
 func (s *StateDB) fastDeleteStorage(addrHash common.Hash, root common.Hash) (bool, common.StorageSize, map[common.Hash][]byte, *trienode.NodeSet, error) {
+	// begin PluGeth Injection // this injection is neccessary to enable the native geth tests in core/state to pass
+	if _, err := s.snap.Account(addrHash); err != nil {
+		return false, 0, nil, nil, err
+	}
+	// end PluGeth Injection
 	iter, err := s.snaps.StorageIterator(s.originalRoot, addrHash, common.Hash{})
 	if err != nil {
 		return false, 0, nil, nil, err
