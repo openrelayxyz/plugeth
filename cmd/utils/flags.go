@@ -95,6 +95,12 @@ var (
 		Value:    flags.DirectoryString(filepath.Join("<datadir>", "plugins")),
 		Category: flags.EthCategory,
 	}
+	// ClassicFlag = &cli.BoolFlag{
+	// 	Name:     "Classic",
+	// 	Usage:    "Sepolia network: pre-configured proof-of-work test network",
+	// 	Category: flags.EthCategory,
+	// }
+
 	//end PluGeth code injection
 	DataDirFlag = &flags.DirectoryFlag{
 		Name:     "datadir",
@@ -965,7 +971,12 @@ func init() {
 // if none (or the empty string) is specified. If the node is starting a testnet,
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
+	// begin PluGeth injection
 	if path := ctx.String(DataDirFlag.Name); path != "" {
+		if pluginPath := pluginDefaultDataDir(path); pluginPath != "" {
+			return pluginPath
+		}
+	// end PluGeth injection
 		if ctx.Bool(RinkebyFlag.Name) {
 			return filepath.Join(path, "rinkeby")
 		}
@@ -1018,6 +1029,11 @@ func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 // flags, reverting to pre-configured ones if none have been specified.
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.MainnetBootnodes
+	// begin PluGeth injection
+	if pluginUrls := pluginSetBootstrapNodes(); pluginUrls != nil {
+		urls = pluginUrls		
+	}
+	// end PluGeth injection
 	switch {
 	case ctx.IsSet(BootnodesFlag.Name):
 		urls = SplitAndTrim(ctx.String(BootnodesFlag.Name))
@@ -1650,6 +1666,18 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setRequiredBlocks(ctx, cfg)
 	setLes(ctx, cfg)
+
+	// beginPluGethInjection
+	if pluginNetworkId := pluginNetworkId(); pluginNetworkId != nil {
+		cfg.NetworkId = *pluginNetworkId
+	}
+	if pluginETHDiscoveryURLs := pluginETHDiscoveryURLs(); pluginETHDiscoveryURLs != nil {
+		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs
+	}
+	if pluginSnapDiscoveryURLs := pluginSnapDiscoveryURLs(); pluginSnapDiscoveryURLs != nil {
+		cfg.SnapDiscoveryURLs = pluginSnapDiscoveryURLs
+	}
+	//end PluGeth injection
 
 	// Cap the cache allowance and tune the garbage collector
 	mem, err := gopsutil.VirtualMemory()
