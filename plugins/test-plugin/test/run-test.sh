@@ -56,7 +56,7 @@ if ps -p $pid1 > /dev/null; then
   kill $pid1
 fi
 
-sleep 255
+sleep 25
 
 if ps -p $pid0 > /dev/null; then
   kill $pid0
