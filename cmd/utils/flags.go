@@ -95,12 +95,6 @@ var (
 		Value:    flags.DirectoryString(filepath.Join("<datadir>", "plugins")),
 		Category: flags.EthCategory,
 	}
-	// ClassicFlag = &cli.BoolFlag{
-	// 	Name:     "Classic",
-	// 	Usage:    "Sepolia network: pre-configured proof-of-work test network",
-	// 	Category: flags.EthCategory,
-	// }
-
 	//end PluGeth code injection
 	DataDirFlag = &flags.DirectoryFlag{
 		Name:     "datadir",
@@ -1671,11 +1665,13 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	if pluginNetworkId := pluginNetworkId(); pluginNetworkId != nil {
 		cfg.NetworkId = *pluginNetworkId
 	}
-	if pluginETHDiscoveryURLs := pluginETHDiscoveryURLs(); pluginETHDiscoveryURLs != nil {
-		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs
-	}
-	if pluginSnapDiscoveryURLs := pluginSnapDiscoveryURLs(); pluginSnapDiscoveryURLs != nil {
-		cfg.SnapDiscoveryURLs = pluginSnapDiscoveryURLs
+	if cfg.EthDiscoveryURLs == nil {
+		var lightMode bool
+		if cfg.SyncMode == downloader.LightSync {
+			lightMode = true
+		}
+		cfg.EthDiscoveryURLs := pluginETHDiscoveryURLs(lightMode) {
+		cfg.SnapDiscoveryURLs := pluginSnapDiscoveryURLs()
 	}
 	//end PluGeth injection
 

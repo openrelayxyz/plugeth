@@ -41,6 +41,15 @@ func GetAPIs(stack core.Node, backend core.Backend) []core.API {
 	// this injection is covered by another test in this package. See documentation for details. 
 // }
 
+// cmd/utils/
+
+func SetSnapDiscoveryURLs() {
+	m := map[string]struct{}{
+		"SetSnapDiscoveryURLs":struct{}{},
+	}
+	hookChan <- m
+}
+
 // core/
 
 
@@ -176,12 +185,13 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"LivePostProcessBlock": struct{}{},
 	"LiveCaptureStart": struct{}{},
 	"LiveCaptureState": struct{}{},
+	"LiveCaptureEnd": struct{}{},
+	"PreTrieCommit": struct{}{},
+	"PostTrieCommit": struct{}{},
 	// "LiveCaptureFault": struct{}{},
 	// "LiveCaptureEnter": struct{}{},
 	// "LiveCaptureExit": struct{}{},
 	// "LiveTracerResult": struct{}{},
-	"LiveCaptureEnd": struct{}{},
-	"PreTrieCommit": struct{}{},
-	"PostTrieCommit": struct{}{},
+	"SetSnapDiscoveryURLs": struct{}{},
 } 
 
