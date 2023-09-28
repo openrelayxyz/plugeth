@@ -22,7 +22,7 @@ func TestReorgLongHeadersHook(t *testing.T) {
 		}
 	})
 	defer done()
-	testReorgLong(t, true)
+	testReorgLong(t, true, "")
 	if !invoked {
 		t.Errorf("Expected plugin invocation")
 	}

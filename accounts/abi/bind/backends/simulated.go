@@ -199,7 +199,6 @@ func (b *SimulatedBackend) CodeAt(ctx context.Context, contract common.Address, 
 	if err != nil {
 		return nil, err
 	}
-
 	return stateDB.GetCode(contract), nil
 }
 
@@ -212,7 +211,6 @@ func (b *SimulatedBackend) BalanceAt(ctx context.Context, contract common.Addres
 	if err != nil {
 		return nil, err
 	}
-
 	return stateDB.GetBalance(contract), nil
 }
 
@@ -225,7 +223,6 @@ func (b *SimulatedBackend) NonceAt(ctx context.Context, contract common.Address,
 	if err != nil {
 		return 0, err
 	}
-
 	return stateDB.GetNonce(contract), nil
 }
 
@@ -238,7 +235,6 @@ func (b *SimulatedBackend) StorageAt(ctx context.Context, contract common.Addres
 	if err != nil {
 		return nil, err
 	}
-
 	val := stateDB.GetState(contract, key)
 	return val[:], nil
 }
@@ -681,7 +677,7 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 	// Get the last block
 	block, err := b.blockByHash(ctx, b.pendingBlock.ParentHash())
 	if err != nil {
-		return fmt.Errorf("could not fetch parent")
+		return errors.New("could not fetch parent")
 	}
 	// Check transaction validity
 	signer := types.MakeSigner(b.blockchain.Config(), block.Number(), block.Time())
@@ -700,8 +696,10 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 		}
 		block.AddTxWithChain(b.blockchain, tx)
 	})
-	stateDB, _ := b.blockchain.State()
-
+	stateDB, err := b.blockchain.State()
+	if err != nil {
+		return err
+	}
 	b.pendingBlock = blocks[0]
 	b.pendingState, _ = state.New(b.pendingBlock.Root(), stateDB.Database(), nil)
 	b.pendingReceipts = receipts[0]
@@ -815,17 +813,18 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	// Get the last block
 	block := b.blockchain.GetBlockByHash(b.pendingBlock.ParentHash())
 	if block == nil {
-		return fmt.Errorf("could not find parent")
+		return errors.New("could not find parent")
 	}
 
 	blocks, _ := core.GenerateChain(b.config, block, ethash.NewFaker(), b.database, 1, func(number int, block *core.BlockGen) {
 		block.OffsetTime(int64(adjustment.Seconds()))
 	})
-	stateDB, _ := b.blockchain.State()
-
+	stateDB, err := b.blockchain.State()
+	if err != nil {
+		return err
+	}
 	b.pendingBlock = blocks[0]
 	b.pendingState, _ = state.New(b.pendingBlock.Root(), stateDB.Database(), nil)
-
 	return nil
 }
 
@@ -892,7 +891,7 @@ func (fb *filterBackend) GetReceipts(ctx context.Context, hash common.Hash) (typ
 }
 
 func (fb *filterBackend) GetLogs(ctx context.Context, hash common.Hash, number uint64) ([][]*types.Log, error) {
-	logs := rawdb.ReadLogs(fb.db, hash, number, fb.bc.Config())
+	logs := rawdb.ReadLogs(fb.db, hash, number)
 	return logs, nil
 }
 
