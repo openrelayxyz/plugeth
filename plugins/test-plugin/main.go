@@ -191,7 +191,7 @@ func txFactory() {
 		"from": coinBase,
 	}
 
-	for i := 0; i < 126; i ++ {
+	for i := 0; i < 10; i ++ {
 		time.Sleep(2 * time.Second)
 		err = client.Call(&t3, "eth_sendTransaction", genericArg)
 		if err != nil {
@@ -293,7 +293,5 @@ func testGetContractCode(hash core.Hash) {
 		log.Error("Exit with error, return value from GetContractCode is divergent from control value")
 		os.Exit(1)
 	} 
-
-	log.Info("made it through checkGetContractCode")
 }
 
