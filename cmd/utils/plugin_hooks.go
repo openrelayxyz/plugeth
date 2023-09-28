@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"encoding/json"
+	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/plugins"
 )
@@ -113,4 +115,25 @@ func pluginSnapDiscoveryURLs() []string {
 		return nil
 	}
 	return PluginSnapDiscoveryURLs(plugins.DefaultPluginLoader)
+}
+
+func PluginGenesisBlock(pl *plugins.PluginLoader) *core.Genesis {
+	genesisJSON, ok := plugins.LookupOne[func() []byte](pl, "GenesisBlock")
+	if !ok {
+		return nil
+	}
+	var genesis core.Genesis
+	if err := json.Unmarshal(genesisJSON(), &genesis); err != nil {
+		log.Warn("Error unmarshalling genesis", "err", err)
+		return nil
+	}
+	return &genesis
+}
+
+func pluginGenesisBlock() *core.Genesis {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting PluginGenesisBlock, but default PluginLoader has not been initialized")
+		return nil
+	}
+	return PluginGenesisBlock(plugins.DefaultPluginLoader)
 }
