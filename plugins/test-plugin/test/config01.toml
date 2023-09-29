@@ -1,8 +1,6 @@
 [Eth]
 NetworkId = 6448
 SyncMode = "snap"
-EthDiscoveryURLs = []
-SnapDiscoveryURLs = []
 NoPruning = false
 NoPrefetch = false
 TxLookupLimit = 2350000

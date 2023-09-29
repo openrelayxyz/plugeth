@@ -43,11 +43,44 @@ func GetAPIs(stack core.Node, backend core.Backend) []core.API {
 
 // cmd/utils/
 
-func SetSnapDiscoveryURLs() {
+func SetDefaultDataDir(arg string) string {
+	m := map[string]struct{}{
+		"SetDefaultDataDir":struct{}{},
+	}
+	hookChan <- m
+	return "test"
+}
+
+func SetBootstrapNodes() []string {
+	m := map[string]struct{}{
+		"SetBootstrapNodes":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetNetworkId() *uint64 {
+	m := map[string]struct{}{
+		"SetNetworkId":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetETHDiscoveryURLs(arg bool) []string {
+	m := map[string]struct{}{
+		"SetETHDiscoveryURLs":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetSnapDiscoveryURLs() []string {
 	m := map[string]struct{}{
 		"SetSnapDiscoveryURLs":struct{}{},
 	}
 	hookChan <- m
+	return nil
 }
 
 // core/
@@ -192,6 +225,10 @@ var plugins map[string]struct{} = map[string]struct{}{
 	// "LiveCaptureEnter": struct{}{},
 	// "LiveCaptureExit": struct{}{},
 	// "LiveTracerResult": struct{}{},
+	"SetDefaultDataDir":struct{}{},
+	"SetBootstrapNodes":struct{}{},
+	"SetNetworkId":struct{}{},
+	"SetETHDiscoveryURLs": struct{}{},
 	"SetSnapDiscoveryURLs": struct{}{},
 } 
 

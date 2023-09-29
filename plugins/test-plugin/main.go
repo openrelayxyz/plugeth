@@ -116,8 +116,16 @@ func BlockChain() {
 						// 	delete(plugins, "LiveCaptureExit")
 						// case f("LiveTracerResult"):
 						// 	delete(plugins, "LiveTracerResult")
+						case f("SetDefaultDataDir"):
+							delete(plugins, "SetDefaultDataDir")
+						case f("SetBootstrapNodes"):
+							delete(plugins, "SetBootstrapNodes")
+						case f("SetNetworkId"):
+							delete(plugins, "SetNetworkId")		
+						case f("SetETHDiscoveryURLs"):
+							delete(plugins, "SetETHDiscoveryURLs")
 						case f("SetSnapDiscoveryURLs"):
-						delete(plugins, "SetSnapDiscoveryURLs")
+							delete(plugins, "SetSnapDiscoveryURLs")
 				}
 			}
 		}

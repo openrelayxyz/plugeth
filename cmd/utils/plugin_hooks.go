@@ -6,9 +6,8 @@ import (
 )
 
 func DefaultDataDir(pl *plugins.PluginLoader, path string) string {
-	log.Error("inside default data dir hook")
 	dataDirPath := ""
-	fnList := pl.Lookup("DefaultDataDir", func(item interface{}) bool {
+	fnList := pl.Lookup("SetDefaultDataDir", func(item interface{}) bool {
 		_, ok := item.(func(string) string)
 		return ok
 	})
@@ -21,7 +20,6 @@ func DefaultDataDir(pl *plugins.PluginLoader, path string) string {
 }
 
 func pluginDefaultDataDir(path string) string {
-	log.Error("inside default data dir injection")
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting DefaultDataDir, but default PluginLoader has not been initialized")
 		return ""
@@ -73,26 +71,26 @@ func pluginNetworkId() *uint64 {
 	return PluginNetworkId(plugins.DefaultPluginLoader)
 }
 
-func PluginETHDiscoveryURLs(pl *plugins.PluginLoader) []string {
+func PluginETHDiscoveryURLs(pl *plugins.PluginLoader, mode bool) []string {
 	var ethDiscoveryURLs []string
 	fnList := pl.Lookup("SetETHDiscoveryURLs", func(item interface{}) bool {
-		_, ok := item.(func() []string)
+		_, ok := item.(func(bool) []string)
 		return ok
 	})
 	for _, fni := range fnList {
-		if fn, ok := fni.(func() []string); ok {
-			ethDiscoveryURLs = fn()
+		if fn, ok := fni.(func(bool) []string); ok {
+			ethDiscoveryURLs = fn(mode)
 		}
 	}
 	return ethDiscoveryURLs
 }
 
-func pluginETHDiscoveryURLs() []string {
+func pluginETHDiscoveryURLs(mode bool) []string {
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting pluginETHDiscoveryURLs, but default PluginLoader has not been initialized")
 		return nil
 	}
-	return PluginETHDiscoveryURLs(plugins.DefaultPluginLoader)
+	return PluginETHDiscoveryURLs(plugins.DefaultPluginLoader, mode)
 }
 
 func PluginSnapDiscoveryURLs(pl *plugins.PluginLoader) []string {

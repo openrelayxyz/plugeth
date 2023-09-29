@@ -1510,7 +1510,12 @@ func setSmartCard(ctx *cli.Context, cfg *node.Config) {
 }
 
 func SetDataDir(ctx *cli.Context, cfg *node.Config) {
+	// begin PluGeth injection
+	pluginPath := pluginDefaultDataDir(node.DefaultDataDir())
 	switch {
+	case pluginPath != "" && cfg.DataDir == node.DefaultDataDir():
+		cfg.DataDir = pluginPath
+	// end PluGeth injection
 	case ctx.IsSet(DataDirFlag.Name):
 		cfg.DataDir = ctx.String(DataDirFlag.Name)
 	case ctx.Bool(DeveloperFlag.Name):
@@ -1693,13 +1698,14 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	if pluginNetworkId := pluginNetworkId(); pluginNetworkId != nil {
 		cfg.NetworkId = *pluginNetworkId
 	}
+	
 	if cfg.EthDiscoveryURLs == nil {
 		var lightMode bool
 		if cfg.SyncMode == downloader.LightSync {
 			lightMode = true
 		}
-		cfg.EthDiscoveryURLs := pluginETHDiscoveryURLs(lightMode) {
-		cfg.SnapDiscoveryURLs := pluginSnapDiscoveryURLs()
+		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs(lightMode) 
+		cfg.SnapDiscoveryURLs = pluginSnapDiscoveryURLs()
 	}
 	//end PluGeth injection
 
