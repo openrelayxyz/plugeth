@@ -9,9 +9,9 @@
 mkdir -p test00 test01 test02 00/keystore 01/keystore 02/keystore  00/geth 01/geth 02/geth  00/plugins 01/plugins 02/plugins 
 
 
-cp ../engine.go test00/ 
-cp ../engine.go ../main.go ../hooks.go ../tracer.go ../live_tracer.go  test01/
-cp ../engine.go ../shutdown.go test02/
+cp ../engine.go ../genesis.go test00/
+cp ../engine.go ../genesis.go ../main.go ../hooks.go ../tracer.go ../live_tracer.go  test01/
+cp ../engine.go ../genesis.go ../shutdown.go test02/
 cd test00/ 
 go build -buildmode=plugin -o ../00/plugins
 cd ../
@@ -42,7 +42,7 @@ pid0=$!
 
 sleep 1
 # passive node
-$GETH --cache.preimages --rpc.allow-unprotected-txs --config config01.toml --authrpc.port 8553 --port 64481 --verbosity=3 --syncmode=full --nodiscover --networkid=6448 --datadir=./01/ --unlock 4204477bf7fce868e761caaba991ffc607717dbf --miner.etherbase 4204477bf7fce868e761caaba991ffc607717dbf --password passwordfile --ws --ws.port 8546 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9546 --allow-insecure-unlock &
+$GETH --cache.preimages --config config01.toml --authrpc.port 8553 --port 64481 --verbosity=3 --syncmode=full --nodiscover --networkid=6448 --datadir=./01/ --unlock 4204477bf7fce868e761caaba991ffc607717dbf --miner.etherbase 4204477bf7fce868e761caaba991ffc607717dbf --password passwordfile --ws --ws.port 8546 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9546 --allow-insecure-unlock &
 
 sleep 1 
 

@@ -9,7 +9,7 @@ import (
 
 func DefaultDataDir(pl *plugins.PluginLoader, path string) string {
 	dataDirPath := ""
-	fnList := pl.Lookup("DefaultDataDir", func(item interface{}) bool {
+	fnList := pl.Lookup("SetDefaultDataDir", func(item interface{}) bool {
 		_, ok := item.(func(string) string)
 		return ok
 	})
@@ -80,7 +80,7 @@ func PluginETHDiscoveryURLs(pl *plugins.PluginLoader, mode bool) []string {
 		return ok
 	})
 	for _, fni := range fnList {
-		if fn, ok := fni.(func(mode bool) []string); ok {
+		if fn, ok := fni.(func(bool) []string); ok {
 			ethDiscoveryURLs = fn(mode)
 		}
 	}
