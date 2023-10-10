@@ -482,9 +482,9 @@ func CloneChainConfig(cf *gparams.ChainConfig) *params.ChainConfig {
 		if lv.Kind() != reflect.Invalid {
 			// If core.ChainConfig doesn't have this field, skip it.
 			if v.Type() == lv.Type() && lv.CanSet() {
-				lv.Set(v)
+				v.Set(lv)
 			} else {
-				convertAndSet(lv, v)
+				convertAndSet(v, lv)
 			}
 		}
 	}

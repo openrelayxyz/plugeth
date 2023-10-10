@@ -1698,13 +1698,12 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	if pluginNetworkId := pluginNetworkId(); pluginNetworkId != nil {
 		cfg.NetworkId = *pluginNetworkId
 	}
-	
 	if cfg.EthDiscoveryURLs == nil {
 		var lightMode bool
 		if cfg.SyncMode == downloader.LightSync {
 			lightMode = true
 		}
-		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs(lightMode) 
+		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs(lightMode)
 		cfg.SnapDiscoveryURLs = pluginSnapDiscoveryURLs()
 	}
 	//end PluGeth injection
@@ -1933,6 +1932,13 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 			SetDNSDiscoveryDefaults(cfg, params.MainnetGenesisHash)
 		}
 	}
+
+	//begin plugeth injection
+	if genesis := pluginGenesisBlock(); genesis != nil {
+		cfg.Genesis = genesis
+	}
+	//end plugeth injection
+
 	// Set any dangling config values
 	if ctx.String(CryptoKZGFlag.Name) != "gokzg" && ctx.String(CryptoKZGFlag.Name) != "ckzg" {
 		Fatalf("--%s flag must be 'gokzg' or 'ckzg'", CryptoKZGFlag.Name)
@@ -2197,6 +2203,11 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	case ctx.Bool(DeveloperFlag.Name):
 		Fatalf("Developer chains are ephemeral")
 	}
+	//begin plugeth injection
+	if genesis == nil {
+		genesis = pluginGenesisBlock()
+	}
+	//end plugeth injection
 	return genesis
 }
 
