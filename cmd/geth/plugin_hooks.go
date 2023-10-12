@@ -163,7 +163,7 @@ func plugethCaptureTrieConfig(ctx *cli.Context, stack *node.Node, backend ethapi
 
 	chaindb := backend.ChainDb()
 
-	scheme, err := utils.ParseStateScheme(ctx, chaindb)
+	scheme, err := rawdb.ParseStateScheme(ctx.String(utils.StateSchemeFlag.Name), chaindb)
 	if err != nil {
 		utils.Fatalf("%v", err)
 	} 
