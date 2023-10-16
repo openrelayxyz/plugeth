@@ -990,7 +990,7 @@ func init() {
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
 	// begin PluGeth injection
-	if path := ctx.String(DataDirFlag.Name); path != "" {
+	if path := ctx.String(DataDirFlag.Name); path == "" {
 		if pluginPath := pluginDefaultDataDir(path); pluginPath != "" {
 			return pluginPath
 		}
@@ -1935,7 +1935,10 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 
 	//begin plugeth injection
 	if genesis := pluginGenesisBlock(); genesis != nil {
+		chaindb := MakeChainDatabase(ctx, stack, false)
 		cfg.Genesis = genesis
+		rawdb.WriteChainConfig(chaindb, genesis.ToBlock().Hash(), genesis.Config)
+		chaindb.Close()
 	}
 	//end plugeth injection
 
