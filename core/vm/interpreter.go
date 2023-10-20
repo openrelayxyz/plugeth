@@ -95,6 +95,9 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 		}
 	}
 	evm.Config.ExtraEips = extraEips
+	// begin PluGeth injection
+	table = pluginOpCodeSelect(table)
+	// end PluGeth injection
 	return &EVMInterpreter{evm: evm, table: table}
 }
 
