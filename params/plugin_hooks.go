@@ -13,7 +13,7 @@ func (c *ChainConfig) Is1559(num *big.Int) bool {
 		log.Warn("Attempting is1559, but default PluginLoader has not been initialized")
 		return c.IsLondon(num)
 	}
-	if active, ok := PluginEIPCheck(plugins.DefaultPluginLoader, "Is1559" num); ok {
+	if active, ok := PluginEIPCheck(plugins.DefaultPluginLoader, "Is1559", num); ok {
 		return active
 	}
 	return c.IsLondon(num)
