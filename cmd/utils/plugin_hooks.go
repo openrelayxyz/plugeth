@@ -22,7 +22,6 @@ func DefaultDataDir(pl *plugins.PluginLoader, path string) string {
 }
 
 func pluginDefaultDataDir(path string) string {
-	log.Error("public default data dir")
 	if plugins.DefaultPluginLoader == nil {
 		log.Warn("Attempting DefaultDataDir, but default PluginLoader has not been initialized")
 		return ""

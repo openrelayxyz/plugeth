@@ -989,9 +989,10 @@ func init() {
 // if none (or the empty string) is specified. If the node is starting a testnet,
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
-	// begin PluGeth injection
 	if path := ctx.String(DataDirFlag.Name); path == "" {
+		// begin PluGeth injection
 		if pluginPath := pluginDefaultDataDir(path); pluginPath != "" {
+			log.Error("Inside datdir injection number one")
 			return pluginPath
 		}
 	// end PluGeth injection
@@ -1446,6 +1447,7 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	setGraphQL(ctx, cfg)
 	setWS(ctx, cfg)
 	setNodeUserIdent(ctx, cfg)
+	log.Error("calling set data dir", "cfg.datadir", cfg.DataDir)
 	SetDataDir(ctx, cfg)
 	setSmartCard(ctx, cfg)
 
@@ -1510,10 +1512,12 @@ func setSmartCard(ctx *cli.Context, cfg *node.Config) {
 }
 
 func SetDataDir(ctx *cli.Context, cfg *node.Config) {
+	log.Error("Inside of setDataDir", "default", node.DefaultDataDir())
 	// begin PluGeth injection
 	pluginPath := pluginDefaultDataDir(node.DefaultDataDir())
 	switch {
-	case pluginPath != "" && cfg.DataDir == node.DefaultDataDir():
+	case pluginPath != "" && ctx.String(DataDirFlag.Name) == node.DefaultDataDir():
+		log.Error("Inside datdir injection number two")
 		cfg.DataDir = pluginPath
 	// end PluGeth injection
 	case ctx.IsSet(DataDirFlag.Name):
