@@ -46,6 +46,9 @@ func LookupInstructionSet(rules params.Rules) (JumpTable, error) {
 		return newConstantinopleInstructionSet(), nil
 	case rules.IsByzantium:
 		return newByzantiumInstructionSet(), nil
+	// Begin plugeth injection
+	case rules.IsEIP160:
+	// End plugeth injection
 	case rules.IsEIP158:
 		return newSpuriousDragonInstructionSet(), nil
 	case rules.IsEIP150:
