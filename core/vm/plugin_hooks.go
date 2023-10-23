@@ -24,7 +24,7 @@ func PluginOpCodeSelect(pl *plugins.PluginLoader, jt *JumpTable) *JumpTable {
 		jt = copyJumpTable(jt)
 	}
 	for _, idx := range opCodes {
-		(*jt)[idx] = nil
+		(*jt)[idx] = &operation{execute: opUndefined, maxStack: maxStack(0, 0)}
 	}
 	return jt
 }
