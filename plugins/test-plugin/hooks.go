@@ -177,6 +177,16 @@ func StateUpdate(blockRoot core.Hash, parentRoot core.Hash, coreDestructs map[co
 	hookChan <- m
 }
 
+// core/vm/
+
+func OpCodeSelect() []int {
+	m := map[string]struct{}{
+		"OpCodeSelect":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
 // rpc/
 
 
@@ -247,5 +257,6 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"SetETHDiscoveryURLs": struct{}{},
 	"SetSnapDiscoveryURLs": struct{}{},
 	"ForkIDs": struct{}{},
+	"OpCodeSelect":struct{}{},
 } 
 
