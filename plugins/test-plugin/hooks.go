@@ -220,6 +220,16 @@ func RPCSubscriptionTest() {
 	// this injection is covered by another test in this package. See documentation for details.
 // }
 
+// params/ 
+
+func Is1559(*big.Int) bool { // while this hook resides in params the injections are in consensus/misc/ (2), and core/ (2)
+	m := map[string]struct{}{
+		"Is1559":struct{}{},
+	}
+	hookChan <- m
+	return true
+}
+
 var plugins map[string]struct{} = map[string]struct{}{
 	"OnShutdown": struct{}{},
 	"SetTrieFlushIntervalClone":struct{}{},
@@ -258,5 +268,6 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"SetSnapDiscoveryURLs": struct{}{},
 	"ForkIDs": struct{}{},
 	"OpCodeSelect":struct{}{},
+	"Is1559":struct{}{},
 } 
 

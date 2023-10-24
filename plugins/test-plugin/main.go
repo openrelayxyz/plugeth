@@ -130,6 +130,8 @@ func BlockChain() {
 							delete(plugins, "ForkIDs")
 						case f("OpCodeSelect"):
 							delete(plugins, "OpCodeSelect")
+						case f("Is1559"):
+							delete(plugins, "Is1559")
 				}
 			}
 		}
