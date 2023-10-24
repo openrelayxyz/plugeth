@@ -141,6 +141,23 @@ func SetTrieFlushIntervalClone(duration time.Duration) time.Duration {
 	return duration
 }
 
+// core/forkid/
+
+var onceZero sync.Once
+
+func ForkIDs(byBlock, byTime []uint64) ([]uint64, []uint64) {
+	go func() {
+		onceZero.Do(func() {
+			m := map[string]struct{}{
+				"ForkIDs":struct{}{},
+			}
+			hookChan <- m
+		})
+	}()
+
+	return byBlock, byTime
+}
+
 // core/rawdb/
 
 func ModifyAncients(index uint64, freezerUpdate map[string]struct{}) {
@@ -154,7 +171,6 @@ func AppendAncient(number uint64, hash, header, body, receipts, td []byte) {
 // core/state/
 
 func StateUpdate(blockRoot core.Hash, parentRoot core.Hash, coreDestructs map[core.Hash]struct{}, coreAccounts map[core.Hash][]byte, coreStorage map[core.Hash]map[core.Hash][]byte, coreCode map[core.Hash][]byte) {
-	// log.Warn("StatueUpdate", "blockRoot", blockRoot, "parentRoot", parentRoot, "coreDestructs", coreDestructs, "coreAccounts", coreAccounts, "coreStorage", coreStorage, "coreCode", coreCode)
 	m := map[string]struct{}{
 		"StateUpdate":struct{}{},
 	}
@@ -171,11 +187,11 @@ func GetRPCCalls(method string, id string, params string) {
 	hookChan <- m
 }
 
-var once sync.Once
+var onceOne sync.Once
 
 func RPCSubscriptionTest() {
 	go func() {
-		once.Do(func() {
+		onceOne.Do(func() {
 			m := map[string]struct{}{
 			"RPCSubscriptionTest":struct{}{},
 			}
@@ -230,5 +246,6 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"SetNetworkId":struct{}{},
 	"SetETHDiscoveryURLs": struct{}{},
 	"SetSnapDiscoveryURLs": struct{}{},
+	"ForkIDs": struct{}{},
 } 
 

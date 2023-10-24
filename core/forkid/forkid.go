@@ -240,11 +240,6 @@ func checksumToBytes(hash uint32) [4]byte {
 // gatherForks gathers all the known forks and creates two sorted lists out of
 // them, one for the block number based forks and the second for the timestamps.
 func gatherForks(config *params.ChainConfig, genesis uint64) ([]uint64, []uint64) {
-	// begin PluGeth injection
-	if byBlock, byTime, ok := pluginForkIDs(); ok {
-		return byBlock, byTime
-	}
-	// end PluGeth injection
 	
 	// Gather all the fork block numbers via reflection
 	kind := reflect.TypeOf(params.ChainConfig{})
@@ -299,5 +294,10 @@ func gatherForks(config *params.ChainConfig, genesis uint64) ([]uint64, []uint64
 	for len(forksByTime) > 0 && forksByTime[0] <= genesis {
 		forksByTime = forksByTime[1:]
 	}
+	// begin PluGeth injection
+	if byBlock, byTime, ok := pluginForkIDs(forksByBlock, forksByTime); ok {
+		return byBlock, byTime
+	}
+	// end PluGeth injection
 	return forksByBlock, forksByTime
 }

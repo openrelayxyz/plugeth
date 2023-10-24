@@ -126,6 +126,8 @@ func BlockChain() {
 							delete(plugins, "SetETHDiscoveryURLs")
 						case f("SetSnapDiscoveryURLs"):
 							delete(plugins, "SetSnapDiscoveryURLs")
+						case f("ForkIDs"):
+							delete(plugins, "ForkIDs")
 				}
 			}
 		}

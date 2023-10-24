@@ -1447,7 +1447,6 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	setGraphQL(ctx, cfg)
 	setWS(ctx, cfg)
 	setNodeUserIdent(ctx, cfg)
-	log.Error("calling set data dir", "cfg.datadir", cfg.DataDir)
 	SetDataDir(ctx, cfg)
 	setSmartCard(ctx, cfg)
 
@@ -1512,7 +1511,6 @@ func setSmartCard(ctx *cli.Context, cfg *node.Config) {
 }
 
 func SetDataDir(ctx *cli.Context, cfg *node.Config) {
-	log.Error("Inside of setDataDir", "default", node.DefaultDataDir())
 	// begin PluGeth injection
 	pluginPath := pluginDefaultDataDir(node.DefaultDataDir())
 	switch {
