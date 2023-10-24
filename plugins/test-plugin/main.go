@@ -132,6 +132,8 @@ func BlockChain() {
 							delete(plugins, "OpCodeSelect")
 						case f("Is1559"):
 							delete(plugins, "Is1559")
+						case f("PluginEIPCheck"):
+							delete(plugins, "PluginEIPCheck")
 				}
 			}
 		}

@@ -230,6 +230,14 @@ func Is1559(*big.Int) bool { // while this hook resides in params the injections
 	return true
 }
 
+func Is160(num *big.Int) bool {
+	m := map[string]struct{}{
+		"PluginEIPCheck":struct{}{},
+	}
+	hookChan <- m
+	return true
+}
+
 var plugins map[string]struct{} = map[string]struct{}{
 	"OnShutdown": struct{}{},
 	"SetTrieFlushIntervalClone":struct{}{},
@@ -269,5 +277,6 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"ForkIDs": struct{}{},
 	"OpCodeSelect":struct{}{},
 	"Is1559":struct{}{},
+	"PluginEIPCheck":struct{}{},
 } 
 
