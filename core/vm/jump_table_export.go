@@ -49,7 +49,6 @@ func LookupInstructionSet(rules params.Rules) (JumpTable, error) {
 	// Begin plugeth injection
 	case rules.IsEIP160:
 	// End plugeth injection
-	case rules.IsEIP158:
 		return newSpuriousDragonInstructionSet(), nil
 	case rules.IsEIP150:
 		return newTangerineWhistleInstructionSet(), nil
