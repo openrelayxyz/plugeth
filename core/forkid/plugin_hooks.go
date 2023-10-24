@@ -14,18 +14,6 @@ func PluginForkIDs(pl *plugins.PluginLoader, byBlock, byTime []uint64) ([]uint64
 
 	return pluginByBlock, pluginByTime, ok
 
-	// fnList := pl.Lookup("ForkIDs", func(item interface{}) bool {
-	// 	_, ok := item.(func([]uint64, []uint64) ([]uint64, []uint64))
-	// 	return ok
-	// })
-	// for _, fni := range fnList {
-	// 	if fn, ok := fni.(func([]uint64, []uint64) ([]uint64, []uint64)); ok {
-	// 		pluginByBlock, pluginByTime := fn(byBlock, byTime)
-	// 		return pluginByBlock, pluginByTime, true
-	// 	}
-	// }
-
-	// return nil, nil, false
 }
 
 func pluginForkIDs(byBlock, byTime []uint64) ([]uint64, []uint64, bool) {
