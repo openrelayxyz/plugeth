@@ -101,6 +101,12 @@ func BlockChain() {
 							delete(plugins, "LiveCaptureStart")
 						case f("LiveCaptureState"):
 							delete(plugins, "LiveCaptureState")
+						case f("LiveCaptureEnd"):
+							delete(plugins, "LiveCaptureEnd")
+						case f("PreTrieCommit"):
+							delete(plugins, "PreTrieCommit")
+						case f("PostTrieCommit"):
+							delete(plugins, "PostTrieCommit")
 						// These methods are not covered by tests at this time
 						// case f("LiveCaptureFault"):
 						// 	delete(plugins, "LiveCaptureFault")
@@ -110,12 +116,24 @@ func BlockChain() {
 						// 	delete(plugins, "LiveCaptureExit")
 						// case f("LiveTracerResult"):
 						// 	delete(plugins, "LiveTracerResult")
-						case f("LiveCaptureEnd"):
-							delete(plugins, "LiveCaptureEnd")
-						case f("PreTrieCommit"):
-							delete(plugins, "PreTrieCommit")
-						case f("PostTrieCommit"):
-							delete(plugins, "PostTrieCommit")
+						case f("SetDefaultDataDir"):
+							delete(plugins, "SetDefaultDataDir")
+						case f("SetBootstrapNodes"):
+							delete(plugins, "SetBootstrapNodes")
+						case f("SetNetworkId"):
+							delete(plugins, "SetNetworkId")		
+						case f("SetETHDiscoveryURLs"):
+							delete(plugins, "SetETHDiscoveryURLs")
+						case f("SetSnapDiscoveryURLs"):
+							delete(plugins, "SetSnapDiscoveryURLs")
+						case f("ForkIDs"):
+							delete(plugins, "ForkIDs")
+						case f("OpCodeSelect"):
+							delete(plugins, "OpCodeSelect")
+						case f("Is1559"):
+							delete(plugins, "Is1559")
+						case f("PluginEIPCheck"):
+							delete(plugins, "PluginEIPCheck")
 				}
 			}
 		}

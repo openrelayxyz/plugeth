@@ -852,6 +852,10 @@ type Rules struct {
 	IsBerlin, IsLondon                                      bool
 	IsMerge, IsShanghai, IsCancun, IsPrague                 bool
 	IsVerkle                                                bool
+
+	// begin plugeth injection
+	IsEIP160 bool
+	// end plugeth injection
 }
 
 // Rules ensures c's ChainID is not nil.
@@ -877,5 +881,10 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool, timestamp uint64) Rules 
 		IsCancun:         c.IsCancun(num, timestamp),
 		IsPrague:         c.IsPrague(num, timestamp),
 		IsVerkle:         c.IsVerkle(num, timestamp),
+
+
+		// Begin plugeth injection
+		IsEIP160:         c.IsEIP160(num),
+		// End plugeth injection
 	}
 }

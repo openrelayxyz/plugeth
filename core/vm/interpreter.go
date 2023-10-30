@@ -72,7 +72,9 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 		table = &constantinopleInstructionSet
 	case evm.chainRules.IsByzantium:
 		table = &byzantiumInstructionSet
-	case evm.chainRules.IsEIP158:
+	// begin PluGeth injection
+	case evm.chainRules.IsEIP160:
+	// end PluGeth injection
 		table = &spuriousDragonInstructionSet
 	case evm.chainRules.IsEIP150:
 		table = &tangerineWhistleInstructionSet
@@ -95,6 +97,11 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 		}
 	}
 	evm.Config.ExtraEips = extraEips
+	// begin PluGeth injection
+	if pluginTable := pluginOpCodeSelect(table); pluginTable != nil {
+		table = pluginTable
+	}
+	// end PluGeth injection
 	return &EVMInterpreter{evm: evm, table: table}
 }
 

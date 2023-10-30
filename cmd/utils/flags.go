@@ -979,7 +979,13 @@ var (
 // if none (or the empty string) is specified. If the node is starting a testnet,
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
-	if path := ctx.String(DataDirFlag.Name); path != "" {
+	if path := ctx.String(DataDirFlag.Name); path == "" {
+		// begin PluGeth injection
+		if pluginPath := pluginDefaultDataDir(path); pluginPath != "" {
+			log.Error("Inside datdir injection number one")
+			return pluginPath
+		}
+	// end PluGeth injection
 		if ctx.Bool(GoerliFlag.Name) {
 			return filepath.Join(path, "goerli")
 		}
@@ -1038,7 +1044,12 @@ func setNodeUserIdent(ctx *cli.Context, cfg *node.Config) {
 // 4. default to mainnet nodes
 func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	urls := params.MainnetBootnodes
-	if ctx.IsSet(BootnodesFlag.Name) {
+	// begin PluGeth injection
+	if pluginUrls := pluginSetBootstrapNodes(); pluginUrls != nil {
+		urls = pluginUrls		
+	}
+	// end PluGeth injection
+		if ctx.IsSet(BootnodesFlag.Name) {
 		urls = SplitAndTrim(ctx.String(BootnodesFlag.Name))
 	} else {
 		if cfg.BootstrapNodes != nil {
@@ -1490,7 +1501,13 @@ func setSmartCard(ctx *cli.Context, cfg *node.Config) {
 }
 
 func SetDataDir(ctx *cli.Context, cfg *node.Config) {
+	// begin PluGeth injection
+	pluginPath := pluginDefaultDataDir(node.DefaultDataDir())
 	switch {
+	case pluginPath != "" && ctx.String(DataDirFlag.Name) == node.DefaultDataDir():
+		log.Error("Inside datdir injection number two")
+		cfg.DataDir = pluginPath
+	// end PluGeth injection
 	case ctx.IsSet(DataDirFlag.Name):
 		cfg.DataDir = ctx.String(DataDirFlag.Name)
 	case ctx.Bool(DeveloperFlag.Name):
@@ -1668,6 +1685,20 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	setMiner(ctx, &cfg.Miner)
 	setRequiredBlocks(ctx, cfg)
 	setLes(ctx, cfg)
+
+	// beginPluGethInjection
+	if pluginNetworkId := pluginNetworkId(); pluginNetworkId != nil {
+		cfg.NetworkId = *pluginNetworkId
+	}
+	if cfg.EthDiscoveryURLs == nil {
+		var lightMode bool
+		if cfg.SyncMode == downloader.LightSync {
+			lightMode = true
+		}
+		cfg.EthDiscoveryURLs = pluginETHDiscoveryURLs(lightMode)
+		cfg.SnapDiscoveryURLs = pluginSnapDiscoveryURLs()
+	}
+	//end PluGeth injection
 
 	// Cap the cache allowance and tune the garbage collector
 	mem, err := gopsutil.VirtualMemory()
@@ -1889,6 +1920,16 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 			SetDNSDiscoveryDefaults(cfg, params.MainnetGenesisHash)
 		}
 	}
+
+	//begin plugeth injection
+	if genesis := pluginGenesisBlock(); genesis != nil {
+		chaindb := MakeChainDatabase(ctx, stack, false)
+		cfg.Genesis = genesis
+		rawdb.WriteChainConfig(chaindb, genesis.ToBlock().Hash(), genesis.Config)
+		chaindb.Close()
+	}
+	//end plugeth injection
+
 	// Set any dangling config values
 	if ctx.String(CryptoKZGFlag.Name) != "gokzg" && ctx.String(CryptoKZGFlag.Name) != "ckzg" {
 		Fatalf("--%s flag must be 'gokzg' or 'ckzg'", CryptoKZGFlag.Name)
@@ -2141,6 +2182,11 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	case ctx.Bool(DeveloperFlag.Name):
 		Fatalf("Developer chains are ephemeral")
 	}
+	//begin plugeth injection
+	if genesis == nil {
+		genesis = pluginGenesisBlock()
+	}
+	//end plugeth injection
 	return genesis
 }
 

@@ -157,6 +157,26 @@ func (pl *PluginLoader) ParseFlags(args []string) bool {
 	return len(pl.Flags) > 0
 }
 
+func LookupOne[T any](pl *PluginLoader, name string) (T, bool) {
+	var zero T
+	if pl == nil {
+		if DefaultPluginLoader == nil {
+			log.Warn("Attempting to LookupOne, but default PluginLoader has not been initialized")
+			return zero, false
+		}
+		pl = DefaultPluginLoader
+	}
+	items := pl.Lookup(name, func(v interface{}) bool {
+		_, ok := v.(T)
+		return ok
+	})
+	if len(items) == 0 {
+		return zero, false
+	}
+	return items[0].(T), true
+}
+
+
 func ParseFlags(args []string) bool {
 	if DefaultPluginLoader == nil {
 		log.Warn("Attempting to parse flags, but default PluginLoader has not been initialized")

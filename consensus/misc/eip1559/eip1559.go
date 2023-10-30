@@ -34,7 +34,9 @@ import (
 func VerifyEIP1559Header(config *params.ChainConfig, parent, header *types.Header) error {
 	// Verify that the gas limit remains within allowed bounds
 	parentGasLimit := parent.GasLimit
-	if !config.IsLondon(parent.Number) {
+	// begin PluGeth injection
+	if !config.Is1559(parent.Number) {
+	// end PluGeth injection
 		parentGasLimit = parent.GasLimit * config.ElasticityMultiplier()
 	}
 	if err := misc.VerifyGaslimit(parentGasLimit, header.GasLimit); err != nil {
@@ -56,7 +58,9 @@ func VerifyEIP1559Header(config *params.ChainConfig, parent, header *types.Heade
 // CalcBaseFee calculates the basefee of the header.
 func CalcBaseFee(config *params.ChainConfig, parent *types.Header) *big.Int {
 	// If the current block is the first EIP-1559 block, return the InitialBaseFee.
-	if !config.IsLondon(parent.Number) {
+	// begin PluGeth injection
+	if !config.Is1559(parent.Number) {
+	// end PluGeth injection
 		return new(big.Int).SetUint64(params.InitialBaseFee)
 	}
 

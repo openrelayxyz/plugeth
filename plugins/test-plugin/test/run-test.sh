@@ -9,9 +9,9 @@
 mkdir -p test00 test01 test02 00/keystore 01/keystore 02/keystore  00/geth 01/geth 02/geth  00/plugins 01/plugins 02/plugins 
 
 
-cp ../engine.go test00/ 
-cp ../engine.go ../main.go ../hooks.go ../tracer.go ../live_tracer.go  test01/
-cp ../engine.go ../shutdown.go test02/
+cp ../engine.go ../genesis.go test00/
+cp ../engine.go ../genesis.go ../main.go ../hooks.go ../tracer.go ../live_tracer.go  test01/
+cp ../engine.go ../genesis.go ../shutdown.go test02/
 cd test00/ 
 go build -buildmode=plugin -o ../00/plugins
 cd ../
@@ -32,9 +32,9 @@ cp nodekey02 02/geth/nodekey
 
 echo -n "supersecretpassword" > passwordfile
 
-$GETH init --datadir=./00 genesis.json
-$GETH init --datadir=./01 genesis.json
-$GETH init --datadir=./02 genesis.json
+# $GETH init --datadir=./00 genesis.json
+# $GETH init --datadir=./01 genesis.json
+# $GETH init --datadir=./02 genesis.json
 
 # miner node
 $GETH --cache.preimages --config config00.toml --authrpc.port 8552 --port 64480 --verbosity=0 --nodiscover --networkid=6448 --datadir=./00/ --mine --miner.etherbase f2c207111cb6ef761e439e56b25c7c99ac026a01 --unlock f2c207111cb6ef761e439e56b25c7c99ac026a01 --http --http.api eth,debug,net --http.port 9545 --password passwordfile --allow-insecure-unlock &

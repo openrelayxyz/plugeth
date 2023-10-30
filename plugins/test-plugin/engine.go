@@ -109,3 +109,4 @@ func (e *engine) Close() error {
 func CreateEngine(chainConfig *params.ChainConfig, db restricted.Database) consensus.Engine {
 	return &engine{}
 }
+

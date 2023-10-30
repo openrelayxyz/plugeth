@@ -41,6 +41,48 @@ func GetAPIs(stack core.Node, backend core.Backend) []core.API {
 	// this injection is covered by another test in this package. See documentation for details. 
 // }
 
+// cmd/utils/
+
+func SetDefaultDataDir(arg string) string {
+	m := map[string]struct{}{
+		"SetDefaultDataDir":struct{}{},
+	}
+	hookChan <- m
+	return "test"
+}
+
+func SetBootstrapNodes() []string {
+	m := map[string]struct{}{
+		"SetBootstrapNodes":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetNetworkId() *uint64 {
+	m := map[string]struct{}{
+		"SetNetworkId":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetETHDiscoveryURLs(arg bool) []string {
+	m := map[string]struct{}{
+		"SetETHDiscoveryURLs":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
+func SetSnapDiscoveryURLs() []string {
+	m := map[string]struct{}{
+		"SetSnapDiscoveryURLs":struct{}{},
+	}
+	hookChan <- m
+	return nil
+}
+
 // core/
 
 
@@ -99,6 +141,23 @@ func SetTrieFlushIntervalClone(duration time.Duration) time.Duration {
 	return duration
 }
 
+// core/forkid/
+
+var onceZero sync.Once
+
+func ForkIDs(byBlock, byTime []uint64) ([]uint64, []uint64) {
+	go func() {
+		onceZero.Do(func() {
+			m := map[string]struct{}{
+				"ForkIDs":struct{}{},
+			}
+			hookChan <- m
+		})
+	}()
+
+	return byBlock, byTime
+}
+
 // core/rawdb/
 
 func ModifyAncients(index uint64, freezerUpdate map[string]struct{}) {
@@ -112,11 +171,20 @@ func AppendAncient(number uint64, hash, header, body, receipts, td []byte) {
 // core/state/
 
 func StateUpdate(blockRoot core.Hash, parentRoot core.Hash, coreDestructs map[core.Hash]struct{}, coreAccounts map[core.Hash][]byte, coreStorage map[core.Hash]map[core.Hash][]byte, coreCode map[core.Hash][]byte) {
-	// log.Warn("StatueUpdate", "blockRoot", blockRoot, "parentRoot", parentRoot, "coreDestructs", coreDestructs, "coreAccounts", coreAccounts, "coreStorage", coreStorage, "coreCode", coreCode)
 	m := map[string]struct{}{
 		"StateUpdate":struct{}{},
 	}
 	hookChan <- m
+}
+
+// core/vm/
+
+func OpCodeSelect() []int {
+	m := map[string]struct{}{
+		"OpCodeSelect":struct{}{},
+	}
+	hookChan <- m
+	return nil
 }
 
 // rpc/
@@ -129,11 +197,11 @@ func GetRPCCalls(method string, id string, params string) {
 	hookChan <- m
 }
 
-var once sync.Once
+var onceOne sync.Once
 
 func RPCSubscriptionTest() {
 	go func() {
-		once.Do(func() {
+		onceOne.Do(func() {
 			m := map[string]struct{}{
 			"RPCSubscriptionTest":struct{}{},
 			}
@@ -151,6 +219,24 @@ func RPCSubscriptionTest() {
 // func PostTrieCommit(node core.Hash) {
 	// this injection is covered by another test in this package. See documentation for details.
 // }
+
+// params/ 
+
+func Is1559(*big.Int) bool { // while this hook resides in params the injections are in consensus/misc/ (2), and core/ (2)
+	m := map[string]struct{}{
+		"Is1559":struct{}{},
+	}
+	hookChan <- m
+	return true
+}
+
+func Is160(num *big.Int) bool {
+	m := map[string]struct{}{
+		"PluginEIPCheck":struct{}{},
+	}
+	hookChan <- m
+	return true
+}
 
 var plugins map[string]struct{} = map[string]struct{}{
 	"OnShutdown": struct{}{},
@@ -176,12 +262,21 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"LivePostProcessBlock": struct{}{},
 	"LiveCaptureStart": struct{}{},
 	"LiveCaptureState": struct{}{},
+	"LiveCaptureEnd": struct{}{},
+	"PreTrieCommit": struct{}{},
+	"PostTrieCommit": struct{}{},
 	// "LiveCaptureFault": struct{}{},
 	// "LiveCaptureEnter": struct{}{},
 	// "LiveCaptureExit": struct{}{},
 	// "LiveTracerResult": struct{}{},
-	"LiveCaptureEnd": struct{}{},
-	"PreTrieCommit": struct{}{},
-	"PostTrieCommit": struct{}{},
+	"SetDefaultDataDir":struct{}{},
+	"SetBootstrapNodes":struct{}{},
+	"SetNetworkId":struct{}{},
+	"SetETHDiscoveryURLs": struct{}{},
+	"SetSnapDiscoveryURLs": struct{}{},
+	"ForkIDs": struct{}{},
+	"OpCodeSelect":struct{}{},
+	"Is1559":struct{}{},
+	"PluginEIPCheck":struct{}{},
 } 
 

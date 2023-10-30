@@ -199,7 +199,10 @@ func (w *WrappedStateDB) SlotInAccessList(addr core.Address, slot core.Hash) (ad
 func (w *WrappedStateDB) IntermediateRoot(deleteEmptyObjects bool) core.Hash {
 	return core.Hash(w.s.IntermediateRoot(deleteEmptyObjects))
 }
-	
+
+func (w *WrappedStateDB) AddBalance(addr core.Address, amount *big.Int) {
+	w.s.AddBalance(common.Address(addr), amount)
+}
 
 type Node struct {
 	n *node.Node
