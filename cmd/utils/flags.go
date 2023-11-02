@@ -979,13 +979,7 @@ var (
 // if none (or the empty string) is specified. If the node is starting a testnet,
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
-	if path := ctx.String(DataDirFlag.Name); path == "" {
-		// begin PluGeth injection
-		if pluginPath := pluginDefaultDataDir(path); pluginPath != "" {
-			log.Error("Inside datdir injection number one")
-			return pluginPath
-		}
-	// end PluGeth injection
+	if path := ctx.String(DataDirFlag.Name); path != "" {
 		if ctx.Bool(GoerliFlag.Name) {
 			return filepath.Join(path, "goerli")
 		}
