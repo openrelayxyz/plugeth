@@ -187,6 +187,17 @@ func OpCodeSelect() []int {
 	return nil
 }
 
+// eth/ethconfig
+
+func psudoCreateEngine() {
+	if createEngineCalled {
+		m := map[string]struct{}{
+			"CreateEngine":struct{}{},
+		}
+		hookChan <- m
+	}
+}
+
 // rpc/
 
 
@@ -239,6 +250,7 @@ func Is160(num *big.Int) bool {
 }
 
 var plugins map[string]struct{} = map[string]struct{}{
+	"CreateEngine":struct{}{},
 	"OnShutdown": struct{}{},
 	"SetTrieFlushIntervalClone":struct{}{},
 	"StateUpdate": struct{}{},
