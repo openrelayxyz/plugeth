@@ -40,7 +40,9 @@ func (t *WrappedTrie) Hash() core.Hash {
 
 func (t *WrappedTrie) NodeIterator(startKey []byte) core.NodeIterator {
 	itr, err := t.t.NodeIterator(startKey)
-	log.Error("Error returned from geth side NodeIterator", "err", err)
+	if err != nil {
+		log.Error("Error returned from geth side NodeIterator", "err", err)
+	}
 	return &WrappedNodeIterator{itr}
 }
 
