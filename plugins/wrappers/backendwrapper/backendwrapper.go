@@ -13,12 +13,10 @@ import (
 	gcore "github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	gparams "github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 
@@ -29,6 +27,7 @@ import (
 
 type Backend struct {
 	b               ethapi.Backend
+	db              state.Database
 	newTxsFeed      event.Feed
 	newTxsOnce      sync.Once
 	chainFeed       event.Feed
@@ -44,14 +43,17 @@ type Backend struct {
 	removedLogsFeed event.Feed
 	removedLogsOnce sync.Once
 	chainConfig     *params.ChainConfig
-	trieConfig      *trie.Config
 }
 
-func NewBackend(b ethapi.Backend, tc *trie.Config) *Backend {
-
+func NewBackend(b ethapi.Backend) *Backend {
+	state, _, err := b.StateAndHeaderByNumber(context.Background(), 0)
+	if err != nil {
+		panic(err.Error())
+	}
 	return &Backend{
 		b: b,
-		trieConfig: tc}
+		db: state.Database(),
+	}
 }
 
 func (b *Backend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
@@ -492,7 +494,7 @@ func CloneChainConfig(cf *gparams.ChainConfig) *params.ChainConfig {
 }
 
 func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
-	tr, err := trie.NewStateTrie(trie.TrieID(common.Hash(h)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
+	tr, err := b.db.OpenTrie(common.Hash(h))
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +510,7 @@ func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (cor
 	if err != nil {
 		return nil, err
 	}
-	acTr, err := trie.NewStateTrie(trie.StorageTrieID(common.Hash(stateRoot), crypto.Keccak256Hash(account[:]), common.Hash(act.Root)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
+	acTr, err := b.db.OpenStorageTrie(common.Hash(stateRoot), common.Address(account), common.Hash(act.Root))
 	if err != nil {
 		return nil, err
 	}
