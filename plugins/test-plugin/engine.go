@@ -17,6 +17,7 @@ var (
 	backend restricted.Backend
 	log     core.Logger
 	events  core.Feed
+	createEngineCalled bool
 )
 
 var httpApiFlagName = "http.api"
@@ -107,6 +108,7 @@ func (e *engine) Close() error {
 }
 
 func CreateEngine(chainConfig *params.ChainConfig, db restricted.Database) consensus.Engine {
+	createEngineCalled = true
 	return &engine{}
 }
 
