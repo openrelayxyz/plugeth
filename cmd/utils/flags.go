@@ -1499,7 +1499,6 @@ func SetDataDir(ctx *cli.Context, cfg *node.Config) {
 	pluginPath := pluginDefaultDataDir(node.DefaultDataDir())
 	switch {
 	case pluginPath != "" && ctx.String(DataDirFlag.Name) == node.DefaultDataDir():
-		log.Error("Inside datdir injection number two")
 		cfg.DataDir = pluginPath
 	// end PluGeth injection
 	case ctx.IsSet(DataDirFlag.Name):
