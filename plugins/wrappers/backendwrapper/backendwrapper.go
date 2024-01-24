@@ -502,15 +502,15 @@ func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
 }
 
 func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (core.Trie, error) {
-	tr, err := b.GetTrie(stateRoot)
+	tr, err := b.db.OpenTrie(common.Hash(stateRoot))
 	if err != nil {
 		return nil, err
 	}
-	act, err := tr.GetAccount(account)
+	act, err := tr.GetAccount(common.Address(account))
 	if err != nil {
 		return nil, err
 	}
-	acTr, err := b.db.OpenStorageTrie(common.Hash(stateRoot), common.Address(account), common.Hash(act.Root))
+	acTr, err := b.db.OpenStorageTrie(common.Hash(stateRoot), common.Address(account), common.Hash(act.Root), tr)
 	if err != nil {
 		return nil, err
 	}
