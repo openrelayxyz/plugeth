@@ -129,7 +129,7 @@ func (b *Backend) SendTx(ctx context.Context, signedTx []byte) error {
 	return b.b.SendTx(ctx, tx)
 }
 func (b *Backend) GetTransaction(ctx context.Context, txHash core.Hash) ([]byte, core.Hash, uint64, uint64, error) { // RLP Encoded transaction {
-	tx, blockHash, blockNumber, index, err := b.b.GetTransaction(ctx, common.Hash(txHash))
+	_, tx, blockHash, blockNumber, index, err := b.b.GetTransaction(ctx, common.Hash(txHash))
 	if err != nil {
 		return nil, core.Hash(blockHash), blockNumber, index, err
 	}

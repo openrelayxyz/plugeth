@@ -1,6 +1,8 @@
 package backendwrapper
 
 import (
+	"math/big"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
@@ -28,7 +30,7 @@ func (t *WrappedTrie) GetAccount(address core.Address) (*core.StateAccount, erro
 	}
 	return &core.StateAccount{
 		Nonce: act.Nonce,
-		Balance: act.Balance,
+		Balance: new(big.Int).SetBytes(act.Balance.Bytes()),
 		Root: core.Hash(act.Root),
 		CodeHash: act.CodeHash,
 	}, nil

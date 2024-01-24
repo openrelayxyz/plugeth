@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"encoding/json"
 
+	"github.com/holiman/uint256"
+
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
@@ -57,7 +59,7 @@ func (w *WrappedContract) Address() core.Address {
 }
 
 func (w *WrappedContract) Value() *big.Int {
-	return w.c.Value()
+	return new(big.Int).SetBytes(w.c.Value().Bytes())
 }
 
 func (w *WrappedContract) Input() []byte {
@@ -128,7 +130,8 @@ func NewWrappedStateDB(d *state.StateDB) *WrappedStateDB {
 
 // GetBalance(Address) *big.Int
 func (w *WrappedStateDB) GetBalance(addr core.Address) *big.Int {
-	return w.s.GetBalance(common.Address(addr))
+	return new(big.Int).SetBytes(w.s.GetBalance(common.Address(addr)).Bytes())
+	
 }
 
 // GetNonce(Address) uint64
@@ -201,7 +204,8 @@ func (w *WrappedStateDB) IntermediateRoot(deleteEmptyObjects bool) core.Hash {
 }
 
 func (w *WrappedStateDB) AddBalance(addr core.Address, amount *big.Int) {
-	w.s.AddBalance(common.Address(addr), amount)
+	castAmount := new(uint256.Int)
+	w.s.AddBalance(common.Address(addr), castAmount.SetBytes(amount.Bytes()))
 }
 
 type Node struct {
