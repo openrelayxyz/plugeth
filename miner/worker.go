@@ -940,9 +940,12 @@ func (w *worker) prepareWork(genParams *generateParams) (*environment, error) {
 		header.MixDigest = genParams.random
 	}
 	// Set baseFee and GasLimit if we are on an EIP-1559 chain
-	if w.chainConfig.IsLondon(header.Number) {
+
+	// begin PluGeth injection
+	if w.chainConfig.Is1559(header.Number) {
 		header.BaseFee = eip1559.CalcBaseFee(w.chainConfig, parent)
-		if !w.chainConfig.IsLondon(parent.Number) {
+		if !w.chainConfig.Is1559(parent.Number) {
+		// end PluGeth injection
 			parentGasLimit := parent.GasLimit * w.chainConfig.ElasticityMultiplier()
 			header.GasLimit = core.CalcGasLimit(parentGasLimit, w.config.GasCeil)
 		}
