@@ -243,7 +243,7 @@ func RPCSubscriptionTest() {
 
 // params/ 
 
-func Is1559(*big.Int) bool { // while this hook resides in params the injections are in consensus/misc/ (2), and core/ (2)
+func Is1559(*big.Int) bool { // while this hook resides in params the injections are in consensus/misc/ (2), and core/ (2) and miner/ (1)
 	m := map[string]struct{}{
 		"Is1559":struct{}{},
 	}
