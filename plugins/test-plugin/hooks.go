@@ -243,7 +243,8 @@ func RPCSubscriptionTest() {
 
 // params/ 
 
-func Is1559(*big.Int) bool { // while this hook resides in params the injections are in consensus/misc/ (2), and core/ (2) and miner/ (1)
+// Is1559 is written in params/ the injections are in: consensus/misc/ (2), and core/ (2) and miner/ (1)
+func Is1559(*big.Int) bool { 
 	m := map[string]struct{}{
 		"Is1559":struct{}{},
 	}
@@ -251,9 +252,19 @@ func Is1559(*big.Int) bool { // while this hook resides in params the injections
 	return true
 }
 
+// the following two hooks are both testing the PluginEIPCheck() hook 
+
 func Is160(num *big.Int) bool {
 	m := map[string]struct{}{
-		"PluginEIPCheck":struct{}{},
+		"Is160":struct{}{},
+	}
+	hookChan <- m
+	return true
+}
+
+func IsShanghai(num *big.Int) bool { 
+	m := map[string]struct{}{
+		"IsShanghai":struct{}{},
 	}
 	hookChan <- m
 	return true
@@ -300,6 +311,7 @@ var plugins map[string]struct{} = map[string]struct{}{
 	"ForkIDs": struct{}{},
 	"OpCodeSelect":struct{}{},
 	"Is1559":struct{}{},
-	"PluginEIPCheck":struct{}{},
+	"Is160":struct{}{},
+	"IsShanghai":struct{}{},
 } 
 
