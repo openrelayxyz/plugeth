@@ -933,7 +933,11 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool, timestamp uint64) Rules 
 		IsBerlin:         c.IsBerlin(num),
 		IsLondon:         c.IsLondon(num),
 		IsMerge:          isMerge,
-		IsShanghai:       isMerge && c.IsShanghai(num, timestamp),
+		// IsShanghai:       isMerge && c.IsShanghai(num, timestamp),
+		// the above is being commented and replaced with the plugeth code below to hotwire the chainrules to allow shanghai without the merge
+		// begin PluGeth injection
+		IsShanghai:       c.IsShanghai(num, timestamp),
+		// end PluGeth injection
 		IsCancun:         isMerge && c.IsCancun(num, timestamp),
 		IsPrague:         isMerge && c.IsPrague(num, timestamp),
 		IsVerkle:         isMerge && c.IsVerkle(num, timestamp),

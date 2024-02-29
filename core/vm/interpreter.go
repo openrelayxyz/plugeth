@@ -60,6 +60,11 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 		table = &cancunInstructionSet
 	case evm.chainRules.IsShanghai:
 		table = &shanghaiInstructionSet
+		// begin PluGeth injection
+		if !evm.chainRules.IsMerge {
+			table[RANDOM] = frontierInstructionSet[DIFFICULTY]
+		}
+		// end PluGeth injection
 	case evm.chainRules.IsMerge:
 		table = &mergeInstructionSet
 	case evm.chainRules.IsLondon:
@@ -72,10 +77,12 @@ func NewEVMInterpreter(evm *EVM) *EVMInterpreter {
 		table = &constantinopleInstructionSet
 	case evm.chainRules.IsByzantium:
 		table = &byzantiumInstructionSet
+
 	// begin PluGeth injection
 	case evm.chainRules.IsEIP160:
-	// end PluGeth injection
 		table = &spuriousDragonInstructionSet
+	// end PluGeth injection
+	
 	case evm.chainRules.IsEIP150:
 		table = &tangerineWhistleInstructionSet
 	case evm.chainRules.IsHomestead:
