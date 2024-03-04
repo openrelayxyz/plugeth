@@ -39,3 +39,16 @@ func (c *ChainConfig) IsEIP160(num *big.Int) bool {
 	}
 	return c.IsEIP158(num)
 }
+
+// IsShanghai is modified here to return whether num is either equal to the Shanghai fork block or greater, if the chain supports Shanghai
+// the foundation implementation has been commented out
+func (c *ChainConfig) IsShanghai(num *big.Int, time uint64) bool {
+	if plugins.DefaultPluginLoader == nil {
+		log.Warn("Attempting isPluginShanghai, but default PluginLoader has not been initialized")
+		return c.IsLondon(num) && isTimestampForked(c.ShanghaiTime, time)
+	}
+	if active, ok := PluginEIPCheck(plugins.DefaultPluginLoader, "IsShanghai", num); ok {
+		return active
+	}
+	return c.IsLondon(num) && isTimestampForked(c.ShanghaiTime, time)
+}

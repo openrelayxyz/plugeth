@@ -12,7 +12,7 @@ import (
 	"github.com/openrelayxyz/plugeth-utils/restricted/crypto"
 )
 
-var hookChan chan map[string]struct{} = make(chan map[string]struct{}, 10)
+var hookChan chan map[string]struct{} = make(chan map[string]struct{}, 20)
 var quit chan string = make(chan string)
 
 func (service *engineService) CaptureShutdown(ctx context.Context) {
@@ -136,8 +136,10 @@ func BlockChain() {
 							delete(plugins, "OpCodeSelect")
 						case f("Is1559"):
 							delete(plugins, "Is1559")
-						case f("PluginEIPCheck"):
-							delete(plugins, "PluginEIPCheck")
+						case f("Is160"):
+							delete(plugins, "Is160")
+						case f("IsShanghai"):
+							delete(plugins, "IsShanghai")
 				}
 			}
 		}

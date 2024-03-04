@@ -558,10 +558,14 @@ func (c *ChainConfig) IsTerminalPoWBlock(parentTotalDiff *big.Int, totalDiff *bi
 	return parentTotalDiff.Cmp(c.TerminalTotalDifficulty) < 0 && totalDiff.Cmp(c.TerminalTotalDifficulty) >= 0
 }
 
+// begin Plugeth injection -- the following code is being commented to enable network plugins to initiate the shanghai fork
+
 // IsShanghai returns whether time is either equal to the Shanghai fork time or greater.
-func (c *ChainConfig) IsShanghai(num *big.Int, time uint64) bool {
-	return c.IsLondon(num) && isTimestampForked(c.ShanghaiTime, time)
-}
+// func (c *ChainConfig) IsShanghai(num *big.Int, time uint64) bool {
+// 	return c.IsLondon(num) && isTimestampForked(c.ShanghaiTime, time)
+// }
+
+// end PluGeth injection
 
 // IsCancun returns whether num is either equal to the Cancun fork time or greater.
 func (c *ChainConfig) IsCancun(num *big.Int, time uint64) bool {
@@ -929,7 +933,11 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool, timestamp uint64) Rules 
 		IsBerlin:         c.IsBerlin(num),
 		IsLondon:         c.IsLondon(num),
 		IsMerge:          isMerge,
-		IsShanghai:       isMerge && c.IsShanghai(num, timestamp),
+		// IsShanghai:       isMerge && c.IsShanghai(num, timestamp),
+		// the above is being commented and replaced with the plugeth code below to hotwire the chainrules to allow shanghai without the merge
+		// begin PluGeth injection
+		IsShanghai:       c.IsShanghai(num, timestamp),
+		// end PluGeth injection
 		IsCancun:         isMerge && c.IsCancun(num, timestamp),
 		IsPrague:         isMerge && c.IsPrague(num, timestamp),
 		IsVerkle:         isMerge && c.IsVerkle(num, timestamp),
