@@ -13,12 +13,10 @@ import (
 	gcore "github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/event"
 	gparams "github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/internal/ethapi"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/rpc"
 
@@ -29,6 +27,7 @@ import (
 
 type Backend struct {
 	b               ethapi.Backend
+	db              state.Database
 	newTxsFeed      event.Feed
 	newTxsOnce      sync.Once
 	chainFeed       event.Feed
@@ -44,14 +43,17 @@ type Backend struct {
 	removedLogsFeed event.Feed
 	removedLogsOnce sync.Once
 	chainConfig     *params.ChainConfig
-	trieConfig      *trie.Config
 }
 
-func NewBackend(b ethapi.Backend, tc *trie.Config) *Backend {
-
+func NewBackend(b ethapi.Backend) *Backend {
+	state, _, err := b.StateAndHeaderByNumber(context.Background(), 0)
+	if err != nil {
+		panic(err.Error())
+	}
 	return &Backend{
 		b: b,
-		trieConfig: tc}
+		db: state.Database(),
+	}
 }
 
 func (b *Backend) SuggestGasTipCap(ctx context.Context) (*big.Int, error) {
@@ -129,7 +131,7 @@ func (b *Backend) SendTx(ctx context.Context, signedTx []byte) error {
 	return b.b.SendTx(ctx, tx)
 }
 func (b *Backend) GetTransaction(ctx context.Context, txHash core.Hash) ([]byte, core.Hash, uint64, uint64, error) { // RLP Encoded transaction {
-	tx, blockHash, blockNumber, index, err := b.b.GetTransaction(ctx, common.Hash(txHash))
+	_, tx, blockHash, blockNumber, index, err := b.b.GetTransaction(ctx, common.Hash(txHash))
 	if err != nil {
 		return nil, core.Hash(blockHash), blockNumber, index, err
 	}
@@ -492,7 +494,7 @@ func CloneChainConfig(cf *gparams.ChainConfig) *params.ChainConfig {
 }
 
 func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
-	tr, err := trie.NewStateTrie(trie.TrieID(common.Hash(h)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
+	tr, err := b.db.OpenTrie(common.Hash(h))
 	if err != nil {
 		return nil, err
 	}
@@ -500,15 +502,15 @@ func (b *Backend) GetTrie(h core.Hash) (core.Trie, error) {
 }
 
 func (b *Backend) GetAccountTrie(stateRoot core.Hash, account core.Address) (core.Trie, error) {
-	tr, err := b.GetTrie(stateRoot)
+	tr, err := b.db.OpenTrie(common.Hash(stateRoot))
 	if err != nil {
 		return nil, err
 	}
-	act, err := tr.GetAccount(account)
+	act, err := tr.GetAccount(common.Address(account))
 	if err != nil {
 		return nil, err
 	}
-	acTr, err := trie.NewStateTrie(trie.StorageTrieID(common.Hash(stateRoot), crypto.Keccak256Hash(account[:]), common.Hash(act.Root)), trie.NewDatabase(b.b.ChainDb(), b.trieConfig))
+	acTr, err := b.db.OpenStorageTrie(common.Hash(stateRoot), common.Address(account), common.Hash(act.Root), tr)
 	if err != nil {
 		return nil, err
 	}

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// geth is the official command-line client for Ethereum.
+// geth is a command-line client for Ethereum.
 package main
 
 import (
@@ -215,6 +215,8 @@ func init() {
 		initCommand,
 		importCommand,
 		exportCommand,
+		importHistoryCommand,
+		exportHistoryCommand,
 		importPreimagesCommand,
 		removedbCommand,
 		dumpCommand,
@@ -356,8 +358,7 @@ func geth(ctx *cli.Context) error {
 	}
 
 	stack, backend := makeFullNode(ctx)
-	trieCfg := plugethCaptureTrieConfig(ctx, stack, backend)
-	wrapperBackend := backendwrapper.NewBackend(backend, trieCfg)
+	wrapperBackend := backendwrapper.NewBackend(backend)
 
 	pluginsInitializeNode(stack, wrapperBackend)
 	if ok, err := plugins.RunSubcommand(ctx); ok {

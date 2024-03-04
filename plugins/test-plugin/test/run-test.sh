@@ -37,17 +37,17 @@ echo -n "supersecretpassword" > passwordfile
 # $GETH init --datadir=./02 genesis.json
 
 # miner node
-$GETH --cache.preimages --config config00.toml --authrpc.port 8552 --port 64480 --verbosity=0 --nodiscover --networkid=6448 --datadir=./00/ --mine --miner.etherbase f2c207111cb6ef761e439e56b25c7c99ac026a01 --unlock f2c207111cb6ef761e439e56b25c7c99ac026a01 --http --http.api eth,debug,net --http.port 9545 --password passwordfile --allow-insecure-unlock &
+$GETH --cache.preimages --config config00.toml --authrpc.port 8552 --pprof --pprof.port=6767 --port 64480 --verbosity=0 --nodiscover --networkid=6448 --datadir=./00/ --mine --miner.etherbase f2c207111cb6ef761e439e56b25c7c99ac026a01 --unlock f2c207111cb6ef761e439e56b25c7c99ac026a01 --http --http.api eth,debug,net --http.port 9545 --password passwordfile --allow-insecure-unlock &
 pid0=$!
 
 sleep 1
 # passive node
-$GETH --cache.preimages --config config01.toml --authrpc.port 8553 --port 64481 --verbosity=3 --syncmode=full --nodiscover --networkid=6448 --datadir=./01/ --unlock 4204477bf7fce868e761caaba991ffc607717dbf --miner.etherbase 4204477bf7fce868e761caaba991ffc607717dbf --password passwordfile --ws --ws.port 8546 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9546 --allow-insecure-unlock &
+$GETH --cache.preimages --config config01.toml --authrpc.port 8553 --pprof --pprof.port=6868 --port 64481 --verbosity=3 --syncmode=full --nodiscover --networkid=6448 --datadir=./01/ --unlock 4204477bf7fce868e761caaba991ffc607717dbf --miner.etherbase 4204477bf7fce868e761caaba991ffc607717dbf --password passwordfile --ws --ws.port 8546 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9546 --allow-insecure-unlock &
 
 sleep 1 
 
 # shutdown node
-$GETH --config config02.toml --authrpc.port 8556 --port 64484 --verbosity=0 --syncmode=full --nodiscover --networkid=6448 --datadir=./02/ --unlock 2cb2e3bdb066a83a7f1191eef1697da51793f631 --miner.etherbase 2cb2e3bdb066a83a7f1191eef1697da51793f631 --password passwordfile --ws --ws.port 8548 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9547 --allow-insecure-unlock &
+$GETH --config config02.toml --authrpc.port 8556 --pprof --pprof.port=6969 --port 64484 --verbosity=0 --syncmode=full --nodiscover --networkid=6448 --datadir=./02/ --unlock 2cb2e3bdb066a83a7f1191eef1697da51793f631 --miner.etherbase 2cb2e3bdb066a83a7f1191eef1697da51793f631 --password passwordfile --ws --ws.port 8548 --ws.api eth,admin --http --http.api eth,debug,net --http.port 9547 --allow-insecure-unlock &
 pid1=$!
 
 sleep 5
