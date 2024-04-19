@@ -151,9 +151,13 @@ func RunSubcommand(ctx *cli.Context) (bool, error) {
 }
 
 func (pl *PluginLoader) ParseFlags(args []string) bool {
+	masterFlagSet := *flag.NewFlagSet("master-plugin-flagset", flag.ContinueOnError)
 	for _, flagset := range pl.Flags {
-		flagset.Parse(args)
+		flagset.VisitAll(func(f *flag.Flag) {
+			masterFlagSet.Var(f.Value, f.Name, f.Usage)
+		})
 	}
+	masterFlagSet.Parse(args)
 	return len(pl.Flags) > 0
 }
 
